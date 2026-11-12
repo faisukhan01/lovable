@@ -80,7 +80,11 @@ def _detail(db: Session, p: Project) -> dict:
 
 
 @router.get("")
-def list_projects(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+def list_projects(
+    with_html: int = 0,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
     fail_stale_generations()
     projects = (
         db.query(Project)
@@ -88,7 +92,13 @@ def list_projects(user: User = Depends(get_current_user), db: Session = Depends(
         .order_by(Project.updated_at.desc())
         .all()
     )
-    return {"projects": [_summary(p) for p in projects]}
+    out = []
+    for p in projects:
+        item = _summary(p)
+        if with_html:
+            item["html"] = p.html
+        out.append(item)
+    return {"projects": out}
 
 
 @router.post("", status_code=201)

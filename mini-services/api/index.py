@@ -15,7 +15,7 @@ from sqlalchemy import text
 from database import Base, SessionLocal, engine
 from generation import fail_stale_generations
 from models import Project, ProjectVersion, User  # noqa: F401 — register models
-from routers import auth, projects, public
+from routers import auth, power, projects, public
 
 
 @asynccontextmanager
@@ -43,6 +43,7 @@ app.add_middleware(
 app.include_router(auth.router)
 app.include_router(projects.router)
 app.include_router(public.router)
+app.include_router(power.router)
 
 
 @app.get("/api/health")

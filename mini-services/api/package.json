@@ -1,0 +1,9 @@
+{
+  "name": "lovify-api",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Lovify main backend - FastAPI + PostgreSQL (Neon)",
+  "scripts": {
+    "dev": "/home/z/.venv/bin/uvicorn index:app --host 0.0.0.0 --port 8000"
+  }
+}

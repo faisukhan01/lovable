@@ -1,0 +1,9 @@
+{
+  "name": "lovify-ai-service",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Z.AI brain service for Lovify - powers app generation, chat and AI features",
+  "scripts": {
+    "dev": "bun --hot index.ts"
+  }
+}

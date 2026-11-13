@@ -111,7 +111,18 @@ export default function DashboardPage() {
       {/* Top nav */}
       <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-white/5 bg-background/80 px-4 backdrop-blur sm:px-6">
         <BrandLogo href="/dashboard" />
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <Button
+            asChild
+            variant="ghost"
+            size="icon"
+            aria-label="Explore gallery"
+            className="text-muted-foreground sm:hidden"
+          >
+            <Link href="/explore">
+              <Compass className="size-4" />
+            </Link>
+          </Button>
           <Button
             asChild
             variant="ghost"
@@ -227,7 +238,7 @@ export default function DashboardPage() {
         ) : projects.length === 0 ? (
           <div className="flex flex-col items-center py-24 text-center">
             <div className="animate-glow flex size-16 items-center justify-center rounded-3xl bg-gradient-to-br from-emerald-400 to-teal-500 shadow-xl shadow-black/50">
-              <Sparkles className="size-7 text-white" />
+              <Sparkles className="size-7 text-emerald-950" />
             </div>
             <h2 className="mt-6 font-display text-xl font-semibold">
               Nothing here yet

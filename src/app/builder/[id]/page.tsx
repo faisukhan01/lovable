@@ -382,54 +382,55 @@ export default function BuilderPage({
   /* --------------------------------- Layout --------------------------------- */
   return (
     <div className="flex h-screen flex-col overflow-hidden">
-      {/* Header */}
-      <header className="flex h-14 shrink-0 items-center gap-3 border-b border-white/5 px-3 sm:px-4">
-        <Button
-          asChild
-          variant="ghost"
-          size="icon"
-          aria-label="Back to dashboard"
-        >
-          <Link href="/dashboard">
-            <ArrowLeft className="size-4" />
-          </Link>
-        </Button>
-        <Separator orientation="vertical" className="h-5" />
+      {/* Header — row 1: identity + publish, row 2 (mobile): scrollable tools */}
+      <header className="shrink-0 border-b border-white/5 bg-background/60 px-2.5 backdrop-blur-xl sm:px-4">
+        <div className="flex h-12 items-center gap-2 sm:h-14 sm:gap-3">
+          <Button
+            asChild
+            variant="ghost"
+            size="icon"
+            aria-label="Back to dashboard"
+          >
+            <Link href="/dashboard">
+              <ArrowLeft className="size-4" />
+            </Link>
+          </Button>
+          <Separator orientation="vertical" className="hidden h-5 sm:block" />
 
-        <span className="truncate max-w-[180px] font-display font-semibold sm:max-w-xs">
-          {project.name}
-        </span>
-        <Badge variant="outline" className="shrink-0">
-          v{project.version}
-        </Badge>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="size-7 shrink-0 text-muted-foreground"
-          aria-label="Rename project"
-          title="Rename"
-          disabled={generating}
-          onClick={() => {
-            setRenameValue(project.name);
-            setRenameOpen(true);
-          }}
-        >
-          <Pencil className="size-3.5" />
-        </Button>
-        {generating ? (
-          <Badge className="hidden shrink-0 border border-amber-400/30 bg-amber-500/10 text-amber-300 hover:bg-amber-500/10 sm:inline-flex">
-            <span className="size-1.5 animate-pulse rounded-full bg-amber-400" />
-            Building…
+          <span className="truncate max-w-[120px] font-display font-semibold sm:max-w-xs">
+            {project.name}
+          </span>
+          <Badge variant="outline" className="shrink-0">
+            v{project.version}
           </Badge>
-        ) : null}
-
-        <div className="flex-1" />
-
-        <div className="flex items-center gap-2 sm:gap-3">
-          {/* Download HTML */}
           <Button
             variant="ghost"
             size="icon"
+            className="size-7 shrink-0 text-muted-foreground"
+            aria-label="Rename project"
+            title="Rename"
+            disabled={generating}
+            onClick={() => {
+              setRenameValue(project.name);
+              setRenameOpen(true);
+            }}
+          >
+            <Pencil className="size-3.5" />
+          </Button>
+          {generating ? (
+            <Badge className="hidden shrink-0 border border-amber-400/30 bg-amber-500/10 text-amber-300 hover:bg-amber-500/10 sm:inline-flex">
+              <span className="size-1.5 animate-pulse rounded-full bg-amber-400" />
+              Building…
+            </Badge>
+          ) : null}
+
+          <div className="flex-1" />
+
+          {/* Download HTML (desktop) */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="hidden md:inline-flex"
             aria-label="Download app as HTML"
             title="Download HTML"
             disabled={!project.html}
@@ -438,12 +439,13 @@ export default function BuilderPage({
             <Download className="size-4" />
           </Button>
 
-          {/* Version history */}
+          {/* Version history (desktop) */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
                 size="icon"
+                className="hidden md:inline-flex"
                 aria-label="Version history"
                 title="Version history"
                 disabled={generating || restoringVersion !== null}
@@ -489,7 +491,7 @@ export default function BuilderPage({
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* Device toggle (preview only) */}
+          {/* Device toggle (preview only, desktop) */}
           {tab === "preview" ? (
             <div className="hidden items-center gap-0.5 rounded-lg border border-white/10 bg-white/[0.03] p-0.5 sm:flex">
               <SegBtn
@@ -509,8 +511,8 @@ export default function BuilderPage({
             </div>
           ) : null}
 
-          {/* Preview / Code segmented control */}
-          <div className="flex items-center gap-0.5 rounded-lg border border-white/10 bg-white/[0.03] p-0.5">
+          {/* Preview / Code segmented control (desktop) */}
+          <div className="hidden items-center gap-0.5 rounded-lg border border-white/10 bg-white/[0.03] p-0.5 md:flex">
             <SegBtn
               active={tab === "preview"}
               onClick={() => setTab("preview")}
@@ -531,7 +533,7 @@ export default function BuilderPage({
 
           {/* Publish / View live */}
           {project.published_slug ? (
-            <Button asChild variant="outline" size="sm">
+            <Button asChild variant="outline" size="sm" className="shrink-0">
               <a
                 href={`/p/${project.published_slug}`}
                 target="_blank"
@@ -547,7 +549,7 @@ export default function BuilderPage({
               size="sm"
               onClick={handlePublish}
               disabled={generating || publishing}
-              className="bg-gradient-to-r from-emerald-400 to-teal-500 text-emerald-950 shadow-lg shadow-black/40 hover:opacity-90"
+              className="shrink-0 bg-gradient-to-r from-emerald-400 to-teal-500 text-emerald-950 shadow-lg shadow-black/40 hover:opacity-90"
             >
               {publishing ? (
                 <Loader2 className="size-4 animate-spin" />
@@ -557,6 +559,107 @@ export default function BuilderPage({
               <span className="hidden sm:inline">Publish</span>
             </Button>
           )}
+        </div>
+
+        {/* Row 2 — mobile-only scrollable tools */}
+        <div className="flex h-11 items-center gap-1.5 overflow-x-auto pb-1.5 [-ms-overflow-style:none] [scrollbar-width:none] md:hidden [&::-webkit-scrollbar]:hidden">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 shrink-0 gap-1.5 text-xs text-muted-foreground"
+            aria-label="Download app as HTML"
+            disabled={!project.html}
+            onClick={handleDownload}
+          >
+            <Download className="size-3.5" />
+            HTML
+          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 shrink-0 gap-1.5 text-xs text-muted-foreground"
+                aria-label="Version history"
+                disabled={generating || restoringVersion !== null}
+              >
+                {restoringVersion !== null ? (
+                  <Loader2 className="size-3.5 animate-spin" />
+                ) : (
+                  <History className="size-3.5" />
+                )}
+                History
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="max-h-72 w-64 overflow-y-auto">
+              {project.versions.length === 0 ? (
+                <p className="px-2 py-4 text-center text-xs text-muted-foreground">
+                  No versions yet
+                </p>
+              ) : (
+                project.versions.map((v) => {
+                  const d = v.created_at ? new Date(v.created_at) : null;
+                  return (
+                    <DropdownMenuItem
+                      key={v.id}
+                      disabled={restoringVersion !== null}
+                      onClick={() => void handleRestore(v.version)}
+                    >
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate">
+                          v{v.version} · {v.label}
+                        </span>
+                        <span className="block text-[10px] text-muted-foreground">
+                          {d && isValid(d)
+                            ? format(d, "MMM d, yyyy · HH:mm")
+                            : ""}
+                        </span>
+                      </span>
+                      {v.version === project.version ? (
+                        <Check className="size-3.5 shrink-0 text-emerald-400" />
+                      ) : null}
+                    </DropdownMenuItem>
+                  );
+                })
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <div className="flex shrink-0 items-center gap-0.5 rounded-lg border border-white/10 bg-white/[0.03] p-0.5">
+            <SegBtn
+              active={tab === "preview"}
+              onClick={() => setTab("preview")}
+              label="Preview"
+            >
+              <PanelTop className="size-3.5" />
+              Preview
+            </SegBtn>
+            <SegBtn
+              active={tab === "code"}
+              onClick={() => setTab("code")}
+              label="Code"
+            >
+              <Code2 className="size-3.5" />
+              Code
+            </SegBtn>
+          </div>
+          {tab === "preview" ? (
+            <div className="flex shrink-0 items-center gap-0.5 rounded-lg border border-white/10 bg-white/[0.03] p-0.5">
+              <SegBtn
+                active={device === "desktop"}
+                onClick={() => setDevice("desktop")}
+                label="Desktop preview"
+              >
+                <Monitor className="size-3.5" />
+              </SegBtn>
+              <SegBtn
+                active={device === "mobile"}
+                onClick={() => setDevice("mobile")}
+                label="Mobile preview"
+              >
+                <Smartphone className="size-3.5" />
+              </SegBtn>
+            </div>
+          ) : null}
         </div>
       </header>
 
@@ -654,7 +757,7 @@ export default function BuilderPage({
             <Button
               onClick={() => void handleRename()}
               disabled={renaming || !renameValue.trim()}
-              className="bg-gradient-to-r from-emerald-400 to-teal-500 text-white hover:opacity-90"
+              className="bg-gradient-to-r from-emerald-400 to-teal-500 text-emerald-950 shadow-lg shadow-black/40 hover:opacity-90"
             >
               {renaming ? <Loader2 className="size-4 animate-spin" /> : null}
               Save
@@ -668,8 +771,8 @@ export default function BuilderPage({
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 font-display text-xl">
-              <span className="flex size-8 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-400 to-emerald-600 shadow-md shadow-emerald-950/40">
-                <Globe className="size-4 text-white" />
+              <span className="flex size-8 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-400 to-emerald-600 shadow-md shadow-black/40">
+                <Globe className="size-4 text-emerald-950" />
               </span>
               Your app is live
             </DialogTitle>

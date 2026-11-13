@@ -45,45 +45,45 @@
 }
 
 /*
- * Lovify design system — "Obsidian Emerald".
- * Neutral graphite-black surfaces (zero color cast), one confident
- * mint-emerald accent, warm amber reserved for tiny highlights.
- * Always dark, quiet, premium — think Vercel/Linear restraint.
+ * Lovify design system — "Void Black".
+ * Near-pure-black canvas with the faintest cool-green cast, one icy
+ * mint accent, hairline borders, and glass that barely whispers.
+ * Motion is slow, smooth and confident. Always dark.
  */
 :root,
 .dark {
-  --radius: 0.75rem;
-  --background: oklch(0.145 0.004 170);
-  --foreground: oklch(0.965 0.003 170);
-  --card: oklch(0.185 0.005 170);
-  --card-foreground: oklch(0.965 0.003 170);
-  --popover: oklch(0.18 0.005 170);
-  --popover-foreground: oklch(0.965 0.003 170);
-  --primary: oklch(0.79 0.16 162);
-  --primary-foreground: oklch(0.17 0.03 165);
-  --secondary: oklch(0.235 0.006 170);
-  --secondary-foreground: oklch(0.965 0.003 170);
-  --muted: oklch(0.215 0.005 170);
-  --muted-foreground: oklch(0.68 0.008 170);
-  --accent: oklch(0.25 0.012 168);
-  --accent-foreground: oklch(0.965 0.003 170);
+  --radius: 0.875rem;
+  --background: oklch(0.11 0.004 180);
+  --foreground: oklch(0.972 0.002 180);
+  --card: oklch(0.148 0.005 180);
+  --card-foreground: oklch(0.972 0.002 180);
+  --popover: oklch(0.145 0.005 180);
+  --popover-foreground: oklch(0.972 0.002 180);
+  --primary: oklch(0.82 0.165 165);
+  --primary-foreground: oklch(0.14 0.03 168);
+  --secondary: oklch(0.19 0.006 180);
+  --secondary-foreground: oklch(0.972 0.002 180);
+  --muted: oklch(0.175 0.005 180);
+  --muted-foreground: oklch(0.66 0.007 180);
+  --accent: oklch(0.215 0.012 175);
+  --accent-foreground: oklch(0.972 0.002 180);
   --destructive: oklch(0.6 0.2 22);
-  --border: oklch(1 0 0 / 8%);
-  --input: oklch(1 0 0 / 10%);
-  --ring: oklch(0.79 0.16 162 / 60%);
-  --chart-1: oklch(0.79 0.16 162);
+  --border: oklch(1 0 0 / 6.5%);
+  --input: oklch(1 0 0 / 9%);
+  --ring: oklch(0.82 0.165 165 / 55%);
+  --chart-1: oklch(0.82 0.165 165);
   --chart-2: oklch(0.75 0.13 195);
   --chart-3: oklch(0.82 0.13 95);
   --chart-4: oklch(0.7 0.14 300);
   --chart-5: oklch(0.66 0.16 25);
-  --sidebar: oklch(0.165 0.004 170);
-  --sidebar-foreground: oklch(0.965 0.003 170);
-  --sidebar-primary: oklch(0.79 0.16 162);
-  --sidebar-primary-foreground: oklch(0.17 0.03 165);
-  --sidebar-accent: oklch(0.24 0.008 170);
-  --sidebar-accent-foreground: oklch(0.965 0.003 170);
-  --sidebar-border: oklch(1 0 0 / 8%);
-  --sidebar-ring: oklch(0.79 0.16 162 / 60%);
+  --sidebar: oklch(0.128 0.004 180);
+  --sidebar-foreground: oklch(0.972 0.002 180);
+  --sidebar-primary: oklch(0.82 0.165 165);
+  --sidebar-primary-foreground: oklch(0.14 0.03 168);
+  --sidebar-accent: oklch(0.2 0.008 180);
+  --sidebar-accent-foreground: oklch(0.972 0.002 180);
+  --sidebar-border: oklch(1 0 0 / 6.5%);
+  --sidebar-ring: oklch(0.82 0.165 165 / 55%);
 }
 
 @layer base {
@@ -92,6 +92,7 @@
   }
   html {
     color-scheme: dark;
+    scroll-behavior: smooth;
   }
   body {
     @apply bg-background text-foreground font-sans antialiased;
@@ -101,13 +102,31 @@
     @apply font-display tracking-tight;
   }
   ::selection {
-    background: oklch(0.79 0.16 162 / 0.28);
+    background: oklch(0.82 0.165 165 / 0.25);
+  }
+  :focus-visible {
+    outline-offset: 2px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .animate-aurora,
+  .animate-aurora-slow,
+  .animate-float,
+  .animate-glow,
+  .shine::after,
+  .animate-beam,
+  .animate-marquee {
+    animation: none !important;
   }
 }
 
 /* ---------- signature gradient text ---------- */
 .text-gradient {
-  background-image: linear-gradient(100deg, oklch(0.85 0.15 160), oklch(0.79 0.16 168) 45%, oklch(0.85 0.12 200));
+  background-image: linear-gradient(100deg, oklch(0.9 0.13 162), oklch(0.82 0.165 168) 45%, oklch(0.85 0.11 200));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -115,20 +134,47 @@
 
 /* ---------- glass panels ---------- */
 .glass-panel {
-  background: oklch(1 0 0 / 3.5%);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border: 1px solid oklch(1 0 0 / 8%);
+  background: oklch(1 0 0 / 3%);
+  backdrop-filter: blur(16px) saturate(1.4);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  border: 1px solid oklch(1 0 0 / 7%);
+}
+
+/* elevated card — the premium workhorse */
+.luxe-card {
+  position: relative;
+  background: linear-gradient(180deg, oklch(0.165 0.006 180 / 90%), oklch(0.135 0.005 180 / 90%));
+  border: 1px solid oklch(1 0 0 / 7%);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+.luxe-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 8%, oklch(1 0 0 / 14%) 50%, transparent 92%);
+  pointer-events: none;
 }
 
 /* ---------- subtle blueprint grid ---------- */
 .bg-grid {
   background-image:
-    linear-gradient(oklch(1 0 0 / 3%) 1px, transparent 1px),
-    linear-gradient(90deg, oklch(1 0 0 / 3%) 1px, transparent 1px);
+    linear-gradient(oklch(1 0 0 / 2.5%) 1px, transparent 1px),
+    linear-gradient(90deg, oklch(1 0 0 / 2.5%) 1px, transparent 1px);
   background-size: 44px 44px;
   mask-image: radial-gradient(ellipse 90% 70% at 50% 30%, black 30%, transparent 75%);
   -webkit-mask-image: radial-gradient(ellipse 90% 70% at 50% 30%, black 30%, transparent 75%);
+}
+
+/* film-grain noise — kills banding on the black canvas */
+.noise::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
 /* ---------- aurora blobs (restrained, cool mint/teal) ---------- */
@@ -136,7 +182,7 @@
   position: absolute;
   border-radius: 9999px;
   filter: blur(110px);
-  opacity: 0.28;
+  opacity: 0.22;
   pointer-events: none;
   will-change: transform;
 }
@@ -172,8 +218,30 @@
   position: absolute;
   inset: 0;
   width: 40%;
-  background: linear-gradient(90deg, transparent, oklch(1 0 0 / 18%), transparent);
+  background: linear-gradient(90deg, transparent, oklch(1 0 0 / 16%), transparent);
   animation: shine-sweep 3.6s ease-in-out infinite;
+}
+
+/* ---------- hero light beam ---------- */
+@keyframes beam-sweep {
+  0%, 100% { transform: translateX(-30%) rotate(8deg); opacity: 0.5; }
+  50% { transform: translateX(30%) rotate(8deg); opacity: 1; }
+}
+.animate-beam {
+  animation: beam-sweep 9s ease-in-out infinite;
+}
+
+/* ---------- marquee ---------- */
+@keyframes marquee-x {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.animate-marquee {
+  animation: marquee-x 30s linear infinite;
+}
+.marquee-mask {
+  mask-image: linear-gradient(90deg, transparent, black 12%, black 88%, transparent);
+  -webkit-mask-image: linear-gradient(90deg, transparent, black 12%, black 88%, transparent);
 }
 
 /* ---------- thinking dots ---------- */
@@ -187,17 +255,46 @@
 
 /* ---------- soft glow pulse ---------- */
 @keyframes glow-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 oklch(0.79 0.16 162 / 0.22); }
-  50% { box-shadow: 0 0 42px 4px oklch(0.79 0.16 162 / 0.16); }
+  0%, 100% { box-shadow: 0 0 0 0 oklch(0.82 0.165 165 / 0.2); }
+  50% { box-shadow: 0 0 42px 4px oklch(0.82 0.165 165 / 0.14); }
 }
 .animate-glow {
   animation: glow-pulse 3.4s ease-in-out infinite;
 }
 
+/* ---------- spotlight hover (JS sets --mx/--my) ---------- */
+.spotlight {
+  position: relative;
+  overflow: hidden;
+}
+.spotlight::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    320px circle at var(--mx, 50%) var(--my, 50%),
+    oklch(0.82 0.165 165 / 0.09),
+    transparent 65%
+  );
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+.spotlight:hover::before {
+  opacity: 1;
+}
+
+/* ---------- gradient hairline ---------- */
+.hairline {
+  background: linear-gradient(90deg, transparent, oklch(0.82 0.165 165 / 35%), transparent);
+  height: 1px;
+}
+
 /* ---------- custom scrollbars ---------- */
 * {
   scrollbar-width: thin;
-  scrollbar-color: oklch(0.4 0.02 170) transparent;
+  scrollbar-color: oklch(0.34 0.015 180) transparent;
 }
 ::-webkit-scrollbar {
   width: 9px;
@@ -207,14 +304,14 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: oklch(0.36 0.015 170 / 0.7);
+  background: oklch(0.3 0.012 180 / 0.7);
   border-radius: 999px;
   border: 2px solid transparent;
   background-clip: padding-box;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: oklch(0.48 0.03 170 / 0.85);
+  background: oklch(0.42 0.03 180 / 0.9);
   background-clip: padding-box;
 }
 
-/* cache-bust marker 1 */
+/* void-black marker */

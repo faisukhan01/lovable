@@ -142,7 +142,7 @@ function AuthPanel() {
             </p>
           </div>
 
-          <div className="glass-panel rounded-2xl p-6 shadow-2xl shadow-black/30 sm:p-8">
+          <div className="luxe-card rounded-2xl p-6 shadow-2xl shadow-black/40 sm:p-8">
             <Tabs value={tab} onValueChange={(v) => setTab(v as "signin" | "signup")}>
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="signin">Sign in</TabsTrigger>

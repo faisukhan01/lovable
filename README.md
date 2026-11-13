@@ -1,24 +1,31 @@
 <div align="center">
 
-<img src="https://capsule-render.vercel.app/api?type=waving&color=0:e879f9,50:8b5cf6,100:fb923c&height=220&section=header&text=Lovify&fontSize=85&fontColor=ffffff&fontAlignY=35&desc=Prompt%20it.%20Build%20it.%20Ship%20it.&descSize=20&descAlignY=55&descColor=ffffff&animation=twinkling" width="100%" alt="Lovify banner" />
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:0d1117,50:10b981,100:34d399&height=230&section=header&text=Lovify&fontSize=88&fontColor=ffffff&fontAlignY=34&desc=Prompt%20it.%20Build%20it.%20Ship%20it.&descSize=20&descAlignY=56&descColor=6ee7b7&animation=twinkling" width="100%" alt="Lovify banner" />
 
 <!-- typewriter line -->
 <a href="https://github.com/faisukhan01/lovable">
-  <img src="https://readme-typing-svg.demolab.com?font=Space+Grotesk:wght@600&size=26&duration=2800&pause=900&color=E879F9&center=true&vCenter=true&random=false&width=720&lines=Describe+an+app+in+plain+English...;Watch+Z.AI+design+%26+code+it+live...;Iterate+by+just+talking+to+it...;Publish+to+the+world+in+one+click." alt="Typing SVG" />
+  <img src="https://readme-typing-svg.demolab.com?font=Space+Grotesk:wght@600&size=26&duration=2800&pause=900&color=34D399&center=true&vCenter=true&random=false&width=760&lines=Describe+an+app+in+plain+English...;Watch+Z.AI+design+%26+code+it+live...;Iterate+by+just+talking+to+it...;Publish+to+the+world+in+one+click." alt="Typing SVG" />
 </a>
 
 **The open-source AI app-builder platform — a Lovable & Base44 alternative, powered by Z.AI as the brain behind every feature.**
 
 [![Next.js 16](https://img.shields.io/badge/Next.js-16-black?style=for-the-badge&logo=next.js)](https://nextjs.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-backend-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Neon-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://neon.tech)
-[![Z.AI](https://img.shields.io/badge/Brain-Z.AI-e879f9?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMTAiIGZpbGw9IiNlODc5ZjkiLz48L3N2Zz4=)](https://z.ai)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org)
+[![SQLAlchemy 2](https://img.shields.io/badge/SQLAlchemy-2.x-D71F00?style=for-the-badge&logo=sqlalchemy&logoColor=white)](https://www.sqlalchemy.org)
+[![Z.AI](https://img.shields.io/badge/Brain-Z.AI-10b981?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMTAiIGZpbGw9IiMxMGI5ODEiLz48L3N2Zz4=)](https://z.ai)
 [![Tailwind CSS 4](https://img.shields.io/badge/Tailwind_CSS-4-38bdf8?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
-[![License](https://img.shields.io/badge/License-MIT-fb923c?style=for-the-badge&logo=opensourceinitiative&logoColor=white)](LICENSE)
+[![License](https://img.shields.io/badge/License-MIT-34d399?style=for-the-badge&logo=opensourceinitiative&logoColor=white)](LICENSE)
 
-[Features](#-features) · [Architecture](#-architecture) · [Quickstart](#-quickstart) · [API](#-api-reference) · [Screenshots](#-screenshots)
+[Features](#-features) · [Tech Stack](#%EF%B8%8F-tech-stack) · [Architecture](#-architecture) · [Quickstart](#-quickstart) · [API](#-api-reference) · [Screenshots](#-screenshots)
 
-<img src="docs/screenshots/landing.png" width="92%" alt="Lovify landing page — prompt box on a midnight-violet hero" />
+<br/>
+
+<img src="docs/screenshots/landing.png" width="92%" alt="Lovify landing page — the Void Black hero with the mint prompt box" />
+
+<br/><br/>
+
+**Zero-config start** — no database URL? Lovify runs on **local SQLite** out of the box. Paste a **PostgreSQL** connection string (free at [neon.tech](https://neon.tech)) when you're ready to go cloud. Same code, one env var.
 
 </div>
 
@@ -30,7 +37,7 @@ Lovify turns **one sentence** into a **real, working web app**. Type what you wa
 
 No boilerplate. No config. No servers. Just describe.
 
-## Features
+## ✦ Features
 
 | | Feature | What it does |
 |---|---|---|
@@ -46,6 +53,20 @@ No boilerplate. No config. No servers. Just describe.
 | 🍴 | **Fork & download** | Fork any of your apps or export the HTML — your code, your rules |
 | 🔐 | **Auth & accounts** | JWT auth with bcrypt hashing on a real PostgreSQL database |
 | 📊 | **Real thumbnails** | Dashboard and gallery render actual live previews of your apps |
+| 📱 | **Fully responsive** | Mobile-first across every page — builder included (chat ⇄ preview tabs, scrollable toolbars) |
+
+## ⚙️ Tech Stack
+
+| Layer | Technology | Why |
+|---|---|---|
+| **Frontend** | [Next.js 16](https://nextjs.org) (App Router) + TypeScript 5 | Server components, streaming, zero-config routing |
+| **UI System** | Tailwind CSS 4 + shadcn/ui + Framer Motion | The "Void Black" design system — pure-black glass, mint accents, spotlight hovers |
+| **Backend** | [FastAPI](https://fastapi.tiangolo.com) + Python 3.12 | Async-ready REST API, background task pipeline for AI builds |
+| **ORM** | SQLAlchemy 2 (typed, 2.0-style) | `TZDateTime`-safe columns, portable across SQLite and PostgreSQL |
+| **Database** | **PostgreSQL** (SQLAlchemy engine) | Production-grade relational store — users, projects, messages, versions. Free cloud hosting via [Neon](https://neon.tech); falls back to local **SQLite** when `DATABASE_URL` is unset |
+| **Auth** | JWT (python-jose) + bcrypt (passlib) | 30-day sessions, hashed passwords, Bearer-protected API |
+| **AI Brain** | [Z.AI](https://z.ai) via `z-ai-web-dev-sdk` on Bun | Dedicated micro-service (:8001) for generation, editing and prompt enhancement |
+| **Styling engine** | Tailwind CSS 4 (OKLCH color tokens) | Hairline borders, film-grain noise, aurora motion — all tokenized |
 
 ## Architecture
 
@@ -72,11 +93,12 @@ No boilerplate. No config. No servers. Just describe.
          │              │
 ┌────────▼───────┐  ┌───▼──────────────────────────┐
 │  POSTGRESQL    │  │   Z.AI BRAIN SERVICE :8001   │
-│  (Neon cloud)  │  │   z-ai-web-dev-sdk wrapper   │
-│  users         │  │  · /generate  create | edit  │
-│  projects      │  │  · /chat      enhancer etc.  │
-│  messages      │  │  truncation auto-recovery    │
-│  versions      │  └──────────────────────────────┘
+│  (Neon cloud   │  │   z-ai-web-dev-sdk wrapper   │
+│   or SQLite)   │  │  · /generate  create | edit  │
+│  users         │  │  · /chat      enhancer etc.  │
+│  projects      │  │  truncation auto-recovery    │
+│  messages      │  └──────────────────────────────┘
+│  versions      │
 └────────────────┘
 ```
 
@@ -94,7 +116,7 @@ No boilerplate. No config. No servers. Just describe.
 ├── mini-services/
 │   ├── api/                 # FastAPI backend (port 8000)
 │   │   ├── index.py         #   app entry + health
-│   │   ├── models.py        #   SQLAlchemy models
+│   │   ├── models.py        #   SQLAlchemy models (SQLite + PostgreSQL safe)
 │   │   ├── generation.py    #   AI pipeline (background tasks)
 │   │   └── routers/         #   auth · projects · public · power
 │   └── ai-service/          # Z.AI brain (port 8001, Bun)
@@ -122,11 +144,11 @@ Create `mini-services/api/.env` (see `.env.example`):
 
 | Variable | What it is |
 |---|---|
-| `DATABASE_URL` | Optional. **Leave empty → local SQLite** (`db/lovify.db`) with zero setup. Paste a PostgreSQL connection string (free tier at [neon.tech](https://neon.tech) works great) to go cloud. |
+| `DATABASE_URL` | Optional. **Leave empty → local SQLite** (`db/lovify.db`) with zero setup. Paste a **PostgreSQL** connection string — a free tier at [neon.tech](https://neon.tech) works great — to go cloud. |
 | `JWT_SECRET` | A long random string for signing tokens |
 | `AI_SERVICE_URL` | `http://localhost:8001` — the Z.AI brain |
 
-Tables are created automatically on first boot. The Next.js keeper route (`/api/boot-services`) also auto-starts both services and self-heals them.
+Tables are created automatically on first boot — on **PostgreSQL** or SQLite, whichever `DATABASE_URL` points to. The Next.js keeper route (`/api/boot-services`) also auto-starts both services and self-heals them.
 
 ## API Reference
 
@@ -155,17 +177,17 @@ Tables are created automatically on first boot. The Next.js keeper route (`/api/
 
 | Builder — chat + live preview | Dashboard — live thumbnails |
 |---|---|
-| <img src="docs/screenshots/builder.png" width="100%" alt="Builder with chat panel and live app preview"/> | <img src="docs/screenshots/dashboard.png" width="100%" alt="Dashboard with live app thumbnails"/> |
+| <img src="docs/screenshots/builder.png" width="100%" alt="Builder with chat panel and live app preview on the Void Black theme"/> | <img src="docs/screenshots/dashboard.png" width="100%" alt="Dashboard with live app thumbnails"/> |
 
-| Explore — public gallery of live apps |
-|---|
-| <img src="docs/screenshots/explore.png" width="100%" alt="Explore gallery with live previews"/> |
+| Landing — Void Black hero | Explore — public gallery |
+|---|---|
+| <img src="docs/screenshots/landing.png" width="100%" alt="Landing page hero"/> | <img src="docs/screenshots/explore.png" width="100%" alt="Explore gallery with live previews"/> |
 
 ## How the AI builds apps
 
 1. Your prompt (enhanced by Z.AI if you like) hits the FastAPI backend.
 2. A background task calls the **Z.AI brain service**, which returns a strict `LOVIFY_META` + `LOVIFY_HTML` payload — a complete single-file app with Tailwind, Lucide icons, animations and localStorage persistence.
-3. The backend parses it, bumps the **version**, stores it in PostgreSQL and streams the result into your preview via polling.
+3. The backend parses it, bumps the **version**, stores it in **PostgreSQL** (or SQLite) and streams the result into your preview via polling.
 4. Truncated outputs are **auto-recovered**: the brain detects the cut and asks Z.AI to regenerate a compact-but-complete version.
 
 ## Roadmap
@@ -175,6 +197,7 @@ Tables are created automatically on first boot. The Next.js keeper route (`/api/
 - [x] Publish + Explore gallery
 - [x] Prompt enhancer + design vibes
 - [x] Fork + HTML export
+- [x] Premium "Void Black" responsive redesign
 - [ ] Streaming builds (token-level progress)
 - [ ] Multi-file project export
 - [ ] GitHub sync for generated apps
@@ -186,7 +209,7 @@ PRs are welcome — the stack is Next.js 16 + TypeScript on the front, FastAPI +
 
 <div align="center">
 
-<img src="https://capsule-render.vercel.app/api?type=waving&color=0:fb923c,50:e879f9,100:8b5cf6&height=140&section=footer&text=Built%20with%20Z.AI%20%E2%80%94%20one%20prompt%20at%20a%20time&fontSize=22&fontColor=ffffff&animation=twinkling" width="100%" alt="footer" />
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:34d399,50:10b981,100:0d1117&height=140&section=footer&text=Built%20with%20Z.AI%20%E2%80%94%20one%20prompt%20at%20a%20time&fontSize=22&fontColor=ffffff&animation=twinkling" width="100%" alt="footer" />
 
 ⭐ Star the repo if Lovify inspired you — it helps a lot!
 

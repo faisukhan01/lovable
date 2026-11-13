@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { motion, type Variants } from "framer-motion";
+import { AnimatePresence, motion, type Variants } from "framer-motion";
 import {
   BrainCircuit,
   ChartNoAxesColumn,
@@ -15,6 +15,7 @@ import {
   ListTodo,
   Loader2,
   Lock,
+  Menu,
   MessagesSquare,
   MonitorSmartphone,
   NotebookPen,
@@ -26,6 +27,7 @@ import {
   Sparkles,
   UserRound,
   Wand2,
+  X,
   Zap,
   type LucideIcon,
 } from "lucide-react";
@@ -130,7 +132,7 @@ const staggerContainer: Variants = {
 
 const staggerItem: Variants = {
   hidden: { opacity: 0, y: 24 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.55, ease: "easeOut" } },
+  show: { opacity: 1, y: 0, transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] } },
 };
 
 /* ---------------------------- helpers ----------------------------- */
@@ -144,10 +146,10 @@ function useCountUp(target: number | null, failed: boolean): string {
     if (failed || target === null) return;
     let raf = 0;
     const start = performance.now();
-    const duration = 1200;
+    const duration = 1400;
     const tick = (now: number) => {
       const t = Math.min(1, (now - start) / duration);
-      const eased = 1 - Math.pow(1 - t, 3);
+      const eased = 1 - Math.pow(1 - t, 4);
       setValue(Math.round(target * eased));
       if (t < 1) raf = requestAnimationFrame(tick);
     };
@@ -166,14 +168,25 @@ function scrollToSection(id: string) {
   };
 }
 
+/** Sets --mx/--my CSS vars on spotlight cards so the glow follows the cursor. */
+function useSpotlight() {
+  const onMouseMove = useCallback((e: React.MouseEvent<HTMLElement>) => {
+    const el = e.currentTarget;
+    const rect = el.getBoundingClientRect();
+    el.style.setProperty("--mx", `${e.clientX - rect.left}px`);
+    el.style.setProperty("--my", `${e.clientY - rect.top}px`);
+  }, []);
+  return onMouseMove;
+}
+
 /* ------------------------- small components ----------------------- */
 
 function StatCounter({ target, failed, label }: { target: number | null; failed: boolean; label: string }) {
   const display = useCountUp(target, failed);
   return (
     <div className="text-center">
-      <div className="font-display text-3xl font-bold text-gradient sm:text-4xl">{display}</div>
-      <div className="mt-1 text-sm text-muted-foreground">{label}</div>
+      <div className="font-display text-4xl font-bold tracking-tight text-gradient sm:text-5xl">{display}</div>
+      <div className="mt-2 text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">{label}</div>
     </div>
   );
 }
@@ -185,16 +198,18 @@ function FeatureCard({ icon: Icon, title, text, gradient, index }: {
   gradient: string;
   index: number;
 }) {
+  const onMouseMove = useSpotlight();
   return (
     <motion.div
       variants={staggerItem}
       transition={{ delay: index * 0.02 }}
-      className="glass-panel group rounded-2xl p-6 transition-all duration-300 hover:-translate-y-1 hover:border-emerald-400/30! hover:shadow-xl hover:shadow-black/30"
+      onMouseMove={onMouseMove}
+      className="luxe-card spotlight group rounded-2xl p-6 transition-all duration-300 hover:-translate-y-1 hover:border-emerald-400/25! hover:shadow-2xl hover:shadow-black/50"
     >
       <div
-        className={`flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br ${gradient} shadow-lg shadow-black/30 ring-1 ring-white/15 transition-transform duration-300 group-hover:scale-105`}
+        className={`flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br ${gradient} shadow-lg shadow-black/40 ring-1 ring-white/15 transition-transform duration-300 group-hover:scale-105`}
       >
-        <Icon className="h-5 w-5 text-white" aria-hidden="true" />
+        <Icon className="h-5 w-5 text-emerald-950" aria-hidden="true" />
       </div>
       <h3 className="mt-5 font-display text-lg font-semibold">{title}</h3>
       <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{text}</p>
@@ -202,37 +217,46 @@ function FeatureCard({ icon: Icon, title, text, gradient, index }: {
   );
 }
 
-function StepCard({ icon: Icon, title, text, gradient, number }: {
+function StepCard({ icon: Icon, title, text, gradient, number, last }: {
   icon: LucideIcon;
   title: string;
   text: string;
   gradient: string;
   number: string;
+  last: boolean;
 }) {
+  const onMouseMove = useSpotlight();
   return (
-    <motion.div variants={staggerItem}>
-      <div className="relative mb-6 h-16">
-        <span
-          aria-hidden="true"
-          className="absolute left-0 top-0 select-none font-display text-6xl font-bold leading-none text-white/10"
-        >
-          {number}
-        </span>
-        <div
-          className={`absolute bottom-0 left-9 flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br ${gradient} shadow-lg shadow-black/40 ring-1 ring-white/15`}
-        >
-          <Icon className="h-5 w-5 text-white" aria-hidden="true" />
+    <motion.div variants={staggerItem} className="relative">
+      {/* connector line */}
+      <div
+        aria-hidden="true"
+        className={`absolute left-6 top-14 hidden h-[calc(100%-2rem)] w-px bg-gradient-to-b from-emerald-400/30 via-white/8 to-transparent md:block ${last ? "md:hidden" : ""}`}
+      />
+      <div onMouseMove={onMouseMove} className="luxe-card spotlight h-full rounded-2xl p-6 transition-colors duration-300 hover:border-emerald-400/25!">
+        <div className="relative mb-6 flex h-16 items-end">
+          <span
+            aria-hidden="true"
+            className="absolute left-0 top-0 select-none font-display text-6xl font-bold leading-none text-white/[0.07]"
+          >
+            {number}
+          </span>
+          <div
+            className={`relative ml-14 flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br ${gradient} shadow-lg shadow-black/40 ring-1 ring-white/15`}
+          >
+            <Icon className="h-5 w-5 text-emerald-950" aria-hidden="true" />
+          </div>
         </div>
+        <h3 className="font-display text-xl font-semibold">{title}</h3>
+        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{text}</p>
       </div>
-      <h3 className="font-display text-xl font-semibold">{title}</h3>
-      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{text}</p>
     </motion.div>
   );
 }
 
 function BrowserMock() {
   return (
-    <div className="overflow-hidden rounded-2xl border border-white/10 bg-card shadow-2xl shadow-black/40 animate-float" style={{ animationDuration: "7s" }}>
+    <div className="luxe-card w-full max-w-2xl overflow-hidden rounded-2xl shadow-2xl shadow-black/50 animate-float" style={{ animationDuration: "7s" }}>
       {/* window chrome */}
       <div className="relative flex items-center justify-center border-b border-white/5 bg-white/[0.02] px-4 py-3">
         <div className="absolute left-4 flex items-center gap-1.5">
@@ -307,7 +331,7 @@ function LiveAppFrame({ app, index }: { app: LiveApp; index: number }) {
   return (
     <motion.div
       variants={staggerItem}
-      className={`overflow-hidden rounded-2xl border border-white/10 bg-card shadow-xl shadow-black/30 transition-all duration-300 hover:-translate-y-1 hover:border-emerald-400/40 hover:shadow-2xl hover:shadow-black/50 ${
+      className={`luxe-card overflow-hidden rounded-2xl shadow-xl shadow-black/40 transition-all duration-300 hover:-translate-y-1 hover:border-emerald-400/30! hover:shadow-2xl hover:shadow-black/60 ${
         index === 0 ? "lg:col-span-2 lg:row-span-1" : ""
       }`}
     >
@@ -372,6 +396,7 @@ export default function Home() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [statsFailed, setStatsFailed] = useState(false);
   const [liveApps, setLiveApps] = useState<LiveApp[] | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   /* False during SSR/hydration render, true afterwards — avoids auth-state
@@ -431,13 +456,15 @@ export default function Home() {
     textareaRef.current?.focus();
   };
 
+  const closeMenu = () => setMenuOpen(false);
+
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="noise relative flex min-h-screen flex-col">
       {/* ------------------------------ navbar ------------------------------ */}
       <header className="fixed inset-x-0 top-0 z-50 border-b border-white/5 bg-background/70 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-6">
+        <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-5 sm:px-6">
           <BrandLogo />
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-4">
             <nav aria-label="Main navigation" className="hidden items-center gap-7 text-sm text-muted-foreground md:flex">
               <a href="#features" onClick={scrollToSection("features")} className="transition hover:text-foreground">
                 Features
@@ -461,35 +488,100 @@ export default function Home() {
                   </Button>
                   <Button
                     asChild
-                    className="bg-gradient-to-r from-emerald-400 to-teal-500 text-emerald-950 shadow-lg shadow-black/30 hover:brightness-110"
+                    className="bg-gradient-to-r from-emerald-400 to-teal-500 text-emerald-950 shadow-lg shadow-black/40 hover:brightness-110"
                   >
                     <Link href="/auth">Start building</Link>
                   </Button>
                 </>
               )}
+              <button
+                type="button"
+                aria-label={menuOpen ? "Close menu" : "Open menu"}
+                aria-expanded={menuOpen}
+                onClick={() => setMenuOpen((v) => !v)}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/[0.03] text-foreground transition hover:bg-white/[0.06] md:hidden"
+              >
+                {menuOpen ? <X className="h-4.5 w-4.5" aria-hidden="true" /> : <Menu className="h-4.5 w-4.5" aria-hidden="true" />}
+              </button>
             </div>
           </div>
         </div>
+
+        {/* mobile slide-down menu */}
+        <AnimatePresence>
+          {menuOpen ? (
+            <motion.nav
+              key="mobile-menu"
+              aria-label="Mobile navigation"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+              className="overflow-hidden border-b border-white/5 bg-background/95 backdrop-blur-xl md:hidden"
+            >
+              <div className="space-y-1 px-5 py-4">
+                <a
+                  href="#features"
+                  onClick={(e) => {
+                    scrollToSection("features")(e);
+                    closeMenu();
+                  }}
+                  className="block rounded-lg px-3 py-2.5 text-sm text-muted-foreground transition hover:bg-white/[0.04] hover:text-foreground"
+                >
+                  Features
+                </a>
+                <a
+                  href="#how-it-works"
+                  onClick={(e) => {
+                    scrollToSection("how-it-works")(e);
+                    closeMenu();
+                  }}
+                  className="block rounded-lg px-3 py-2.5 text-sm text-muted-foreground transition hover:bg-white/[0.04] hover:text-foreground"
+                >
+                  How it works
+                </a>
+                <Link
+                  href="/explore"
+                  onClick={closeMenu}
+                  className="block rounded-lg px-3 py-2.5 text-sm text-muted-foreground transition hover:bg-white/[0.04] hover:text-foreground"
+                >
+                  Explore
+                </Link>
+                {!authed ? (
+                  <Link
+                    href="/auth"
+                    onClick={closeMenu}
+                    className="block rounded-lg px-3 py-2.5 text-sm text-muted-foreground transition hover:bg-white/[0.04] hover:text-foreground"
+                  >
+                    Sign in
+                  </Link>
+                ) : null}
+              </div>
+            </motion.nav>
+          ) : null}
+        </AnimatePresence>
       </header>
 
       <main>
         {/* ------------------------------ hero ------------------------------ */}
-        <section className="relative overflow-hidden pb-20 pt-32">
+        <section className="relative overflow-hidden pb-20 pt-28 sm:pt-32">
           <div aria-hidden="true" className="pointer-events-none absolute inset-0">
-            <div className="aurora-blob animate-aurora -left-24 -top-24 h-[520px] w-[520px] bg-emerald-500/30" />
-            <div className="aurora-blob animate-aurora-slow -right-40 top-10 h-[620px] w-[620px] bg-teal-500/30" />
-            <div className="aurora-blob animate-aurora -bottom-32 left-1/3 h-[480px] w-[480px] bg-lime-500/20" />
+            <div className="aurora-blob animate-aurora -left-24 -top-24 h-[520px] w-[520px] bg-emerald-500/25" />
+            <div className="aurora-blob animate-aurora-slow -right-40 top-10 h-[620px] w-[620px] bg-teal-500/25" />
+            <div className="aurora-blob animate-aurora -bottom-32 left-1/3 h-[480px] w-[480px] bg-lime-500/15" />
             <div className="absolute inset-0 bg-grid" />
+            {/* sweeping light beam */}
+            <div className="animate-beam absolute -top-40 left-1/2 h-[140%] w-[46rem] -translate-x-1/2 bg-gradient-to-b from-transparent via-emerald-400/[0.05] to-transparent blur-3xl" />
           </div>
 
-          <div className="relative mx-auto max-w-4xl px-6 text-center">
+          <div className="relative mx-auto max-w-4xl px-5 text-center sm:px-6">
             <motion.div
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, ease: "easeOut" }}
               className="flex justify-center"
             >
-              <span className="glass-panel inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm text-muted-foreground">
+              <span className="glass-panel inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs text-muted-foreground sm:text-sm">
                 <Sparkles className="h-4 w-4 text-emerald-400" aria-hidden="true" />
                 Powered by Z.AI — the brain behind every build
                 <span className="ml-1 h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" aria-hidden="true" />
@@ -499,8 +591,8 @@ export default function Home() {
             <motion.h1
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, ease: "easeOut", delay: 0.08 }}
-              className="mt-8 font-display text-5xl font-bold leading-[1.05] sm:text-6xl lg:text-7xl"
+              transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1], delay: 0.08 }}
+              className="mt-8 font-display text-[2.75rem] font-bold leading-[1.04] tracking-tight sm:text-6xl lg:text-7xl"
             >
               Build apps at the
               <br />
@@ -510,8 +602,8 @@ export default function Home() {
             <motion.p
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, ease: "easeOut", delay: 0.16 }}
-              className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground"
+              transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1], delay: 0.16 }}
+              className="mx-auto mt-6 max-w-2xl text-base text-muted-foreground sm:text-lg"
             >
               Describe what you want in plain words. Lovify’s Z.AI brain designs it, codes it and ships a real,
               working app in seconds — then you refine it by simply talking to it.
@@ -521,21 +613,23 @@ export default function Home() {
             <motion.div
               initial={{ opacity: 0, y: 24 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, ease: "easeOut", delay: 0.24 }}
+              transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1], delay: 0.24 }}
               className="relative mx-auto mt-10 max-w-3xl"
             >
               <div
                 aria-hidden="true"
-                className="absolute -inset-2 rounded-3xl bg-gradient-to-r from-emerald-400/15 via-teal-500/15 to-lime-400/15 blur-2xl"
+                className={`absolute -inset-3 rounded-[2rem] bg-gradient-to-r from-emerald-400/20 via-teal-500/20 to-lime-400/20 blur-2xl transition-opacity duration-500 ${
+                  focused ? "opacity-100" : "opacity-50"
+                }`}
               />
               <div
                 className={`relative rounded-2xl bg-gradient-to-r p-[1.5px] transition-all duration-300 ${
                   focused
-                    ? "from-emerald-400 via-teal-500 to-lime-400 shadow-xl shadow-black/40"
-                    : "from-emerald-400/60 via-teal-500/60 to-lime-400/60"
+                    ? "from-emerald-400 via-teal-500 to-lime-400 shadow-[0_0_60px_-12px] shadow-emerald-500/40"
+                    : "from-emerald-400/50 via-teal-500/50 to-lime-400/50"
                 }`}
               >
-                <div className="rounded-[calc(1rem-1px)] bg-background/80 p-4 backdrop-blur-xl">
+                <div className="rounded-[calc(1rem-1px)] bg-background/85 p-4 backdrop-blur-2xl sm:p-5">
                   <Textarea
                     ref={textareaRef}
                     rows={3}
@@ -552,7 +646,7 @@ export default function Home() {
                     }}
                     placeholder="A CRM for my coffee shop with inventory, a kanban and sales charts…"
                     aria-label="Describe the app you want to build"
-                    className="min-h-[84px] resize-none border-0 bg-transparent p-0 text-base shadow-none placeholder:text-muted-foreground/70 focus-visible:ring-0"
+                    className="min-h-[84px] resize-none border-0 bg-transparent p-0 text-base shadow-none placeholder:text-muted-foreground/60 focus-visible:ring-0"
                   />
                   <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
                     <div className="flex flex-wrap items-center gap-2.5">
@@ -567,7 +661,7 @@ export default function Home() {
                     <Button
                       onClick={submitPrompt}
                       disabled={creating}
-                      className="gap-2 bg-gradient-to-r from-emerald-400 to-teal-500 text-emerald-950 shadow-lg shadow-black/40 hover:brightness-110"
+                      className="shine relative gap-2 overflow-hidden bg-gradient-to-r from-emerald-400 to-teal-500 text-emerald-950 shadow-lg shadow-black/40 hover:brightness-110"
                     >
                       {creating ? (
                         <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
@@ -581,12 +675,12 @@ export default function Home() {
               </div>
             </motion.div>
 
-            {/* example chips */}
+            {/* example chips — swipeable on mobile */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, ease: "easeOut", delay: 0.32 }}
-              className="mt-5 flex flex-wrap justify-center gap-2"
+              transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1], delay: 0.32 }}
+              className="marquee-mask mt-5 flex gap-2 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] sm:flex-wrap sm:justify-center sm:overflow-visible sm:pb-0 [&::-webkit-scrollbar]:hidden"
             >
               {EXAMPLE_PROMPTS.map((ex) => {
                 const Icon = EXAMPLE_ICONS[ex.icon] ?? Sparkles;
@@ -595,7 +689,7 @@ export default function Home() {
                     key={ex.icon}
                     type="button"
                     onClick={() => fillPrompt(ex.prompt)}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.03] px-3.5 py-1.5 text-sm text-muted-foreground transition hover:border-emerald-400/40 hover:bg-emerald-500/10 hover:text-foreground"
+                    className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.03] px-3.5 py-1.5 text-sm text-muted-foreground transition hover:border-emerald-400/40 hover:bg-emerald-500/10 hover:text-foreground"
                   >
                     <Icon className="h-3.5 w-3.5" aria-hidden="true" />
                     {ex.title}
@@ -607,33 +701,35 @@ export default function Home() {
         </section>
 
         {/* ---------------------------- stats band ---------------------------- */}
-        <section aria-label="Platform statistics" className="mt-4 border-y border-white/5 py-10">
-          <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-10 px-6 sm:gap-16">
+        <section aria-label="Platform statistics" className="mt-4 border-y border-white/5 py-12">
+          <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-x-12 gap-y-8 px-5 sm:gap-x-20 sm:px-6">
             <StatCounter target={stats ? stats.apps : null} failed={statsFailed} label="apps generated" />
+            <span aria-hidden="true" className="hidden h-10 w-px bg-white/8 sm:block" />
             <StatCounter target={stats ? stats.published : null} failed={statsFailed} label="apps published live" />
+            <span aria-hidden="true" className="hidden h-10 w-px bg-white/8 sm:block" />
             <StatCounter target={stats ? stats.builders : null} failed={statsFailed} label="builders creating" />
           </div>
         </section>
 
         {/* ----------------------------- features ----------------------------- */}
-        <section id="features" className="scroll-mt-20 py-28">
-          <div className="mx-auto max-w-6xl px-6">
+        <section id="features" className="scroll-mt-20 py-24 sm:py-28">
+          <div className="mx-auto max-w-6xl px-5 sm:px-6">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-80px" }}
-              transition={{ duration: 0.55, ease: "easeOut" }}
+              transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
               className="text-center"
             >
-              <p className="text-sm font-medium uppercase tracking-widest text-emerald-400">Everything included</p>
-              <h2 className="mt-3 font-display text-4xl font-bold">A complete builder, not a toy</h2>
+              <p className="text-xs font-medium uppercase tracking-[0.25em] text-emerald-400 sm:text-sm">Everything included</p>
+              <h2 className="mt-3 font-display text-3xl font-bold sm:text-4xl">A complete builder, not a toy</h2>
             </motion.div>
             <motion.div
               variants={staggerContainer}
               initial="hidden"
               whileInView="show"
               viewport={{ once: true, margin: "-60px" }}
-              className="mt-14 grid gap-5 md:grid-cols-3"
+              className="mt-12 grid gap-4 sm:mt-14 sm:gap-5 md:grid-cols-2 lg:grid-cols-3"
             >
               {FEATURES.map((f, i) => (
                 <FeatureCard key={f.title} icon={f.icon} title={f.title} text={f.text} gradient={f.gradient} index={i} />
@@ -643,24 +739,24 @@ export default function Home() {
         </section>
 
         {/* --------------------------- how it works --------------------------- */}
-        <section id="how-it-works" className="scroll-mt-20 py-28">
-          <div className="mx-auto max-w-5xl px-6">
+        <section id="how-it-works" className="scroll-mt-20 py-24 sm:py-28">
+          <div className="mx-auto max-w-5xl px-5 sm:px-6">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-80px" }}
-              transition={{ duration: 0.55, ease: "easeOut" }}
+              transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
               className="text-center"
             >
-              <p className="text-sm font-medium uppercase tracking-widest text-emerald-400">How it works</p>
-              <h2 className="mt-3 font-display text-4xl font-bold">From idea to live app in three moves</h2>
+              <p className="text-xs font-medium uppercase tracking-[0.25em] text-emerald-400 sm:text-sm">How it works</p>
+              <h2 className="mt-3 font-display text-3xl font-bold sm:text-4xl">From idea to live app in three moves</h2>
             </motion.div>
             <motion.div
               variants={staggerContainer}
               initial="hidden"
               whileInView="show"
               viewport={{ once: true, margin: "-60px" }}
-              className="mt-14 grid gap-6 md:grid-cols-3"
+              className="mt-12 grid gap-4 sm:mt-14 sm:gap-5 md:grid-cols-3"
             >
               {STEPS.map((s, i) => (
                 <StepCard
@@ -670,6 +766,7 @@ export default function Home() {
                   text={s.text}
                   gradient={s.gradient}
                   number={`0${i + 1}`}
+                  last={i === STEPS.length - 1}
                 />
               ))}
             </motion.div>
@@ -677,17 +774,17 @@ export default function Home() {
         </section>
 
         {/* ----------------------------- showcase ----------------------------- */}
-        <section id="showcase" className="scroll-mt-20 py-28">
-          <div className="mx-auto max-w-6xl px-6">
+        <section id="showcase" className="scroll-mt-20 py-24 sm:py-28">
+          <div className="mx-auto max-w-6xl px-5 sm:px-6">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-80px" }}
-              transition={{ duration: 0.55, ease: "easeOut" }}
+              transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
               className="text-center"
             >
-              <p className="text-sm font-medium uppercase tracking-widest text-emerald-400">See it in action</p>
-              <h2 className="mt-3 font-display text-4xl font-bold">Real apps. Zero boilerplate.</h2>
+              <p className="text-xs font-medium uppercase tracking-[0.25em] text-emerald-400 sm:text-sm">See it in action</p>
+              <h2 className="mt-3 font-display text-3xl font-bold sm:text-4xl">Real apps. Zero boilerplate.</h2>
               <p className="mx-auto mt-4 max-w-xl text-muted-foreground">
                 {liveApps && liveApps.length > 0
                   ? "These are live right now — every one was built from a single prompt."
@@ -699,14 +796,14 @@ export default function Home() {
               initial="hidden"
               whileInView="show"
               viewport={{ once: true, margin: "-60px" }}
-              className="mt-14"
+              className="mt-12 sm:mt-14"
             >
               {liveApps === null ? (
                 <div className="flex justify-center">
                   <BrowserMock />
                 </div>
               ) : liveApps.length > 0 ? (
-                <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+                <div className="grid gap-4 sm:gap-5 md:grid-cols-2 lg:grid-cols-3">
                   {liveApps.map((app, i) => (
                     <LiveAppFrame key={app.slug} app={app} index={i} />
                   ))}
@@ -716,16 +813,16 @@ export default function Home() {
                   <BrowserMock />
                 </div>
               )}
-              <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-                <span className="glass-panel inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm text-muted-foreground">
+              <div className="mt-8 flex flex-wrap items-center justify-center gap-2.5 sm:gap-3">
+                <span className="glass-panel inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs text-muted-foreground sm:text-sm">
                   <Zap className="h-4 w-4 text-amber-400" aria-hidden="true" />
                   avg build 38s
                 </span>
-                <span className="glass-panel inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm text-muted-foreground">
+                <span className="glass-panel inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs text-muted-foreground sm:text-sm">
                   <LayoutGrid className="h-4 w-4 text-emerald-400" aria-hidden="true" />
                   pixel-perfect responsive
                 </span>
-                <span className="glass-panel inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm text-muted-foreground">
+                <span className="glass-panel inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs text-muted-foreground sm:text-sm">
                   <ShieldCheck className="h-4 w-4 text-emerald-400" aria-hidden="true" />
                   sandboxed previews
                 </span>
@@ -741,27 +838,27 @@ export default function Home() {
         </section>
 
         {/* -------------------------------- CTA -------------------------------- */}
-        <section className="relative overflow-hidden py-28 text-center">
+        <section className="relative overflow-hidden py-24 text-center sm:py-28">
           <div aria-hidden="true" className="pointer-events-none absolute inset-0">
-            <div className="aurora-blob animate-aurora-slow left-1/2 top-1/2 h-[450px] w-[450px] -translate-x-1/2 -translate-y-1/2 bg-teal-500/20" />
+            <div className="aurora-blob animate-aurora-slow left-1/2 top-1/2 h-[450px] w-[450px] -translate-x-1/2 -translate-y-1/2 bg-teal-500/15" />
           </div>
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-80px" }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
-            className="relative mx-auto max-w-3xl px-6"
+            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+            className="relative mx-auto max-w-3xl px-5 sm:px-6"
           >
-            <h2 className="font-display text-4xl font-bold">
+            <h2 className="font-display text-3xl font-bold sm:text-4xl lg:text-5xl">
               Your next app is <span className="text-gradient">one sentence away.</span>
             </h2>
-            <p className="mx-auto mt-4 max-w-xl text-lg text-muted-foreground">
+            <p className="mx-auto mt-4 max-w-xl text-base text-muted-foreground sm:text-lg">
               Type an idea. Get a working app. Refine it like a doc.
             </p>
             <div className="mt-8 flex justify-center">
               <Button
                 asChild
-                className="shine relative h-12 overflow-hidden px-8 text-base bg-gradient-to-r from-emerald-400 to-teal-500 text-emerald-950 shadow-xl shadow-black/40 hover:brightness-110"
+                className="shine relative h-12 overflow-hidden px-8 text-base bg-gradient-to-r from-emerald-400 to-teal-500 text-emerald-950 shadow-xl shadow-black/50 hover:brightness-110"
               >
                 <Link href="/auth">
                   <Sparkles className="mr-2 h-5 w-5" aria-hidden="true" />
@@ -775,15 +872,15 @@ export default function Home() {
       </main>
 
       {/* ------------------------------ footer ------------------------------ */}
-      <footer className="mt-auto border-t border-white/5 py-10">
-        <div className="mx-auto flex w-full max-w-6xl flex-col items-center justify-between gap-4 px-6 sm:flex-row">
-          <div className="flex flex-col items-center gap-3 sm:flex-row sm:gap-4">
+      <footer className="mt-auto border-t border-white/5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-10">
+        <div className="mx-auto flex w-full max-w-6xl flex-col items-center justify-between gap-5 px-5 sm:px-6 md:flex-row">
+          <div className="flex flex-col items-center gap-3 md:flex-row md:gap-4">
             <BrandLogo size={24} />
-            <span className="text-sm text-muted-foreground">
+            <span className="text-center text-sm text-muted-foreground md:text-left">
               © {new Date().getFullYear()} Lovify — built with Z.AI
             </span>
           </div>
-          <nav aria-label="Footer" className="flex items-center gap-5 text-sm text-muted-foreground">
+          <nav aria-label="Footer" className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm text-muted-foreground">
             <a href="#features" onClick={scrollToSection("features")} className="transition hover:text-foreground">
               Features
             </a>

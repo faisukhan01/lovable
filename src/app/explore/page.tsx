@@ -95,7 +95,7 @@ export default function ExplorePage() {
           </div>
         </section>
 
-        <section className="mx-auto w-full max-w-6xl px-6 pb-24">
+        <section className="mx-auto w-full max-w-6xl px-5 pb-24 sm:px-6">
           {failed ? (
             <div className="glass-panel mx-auto mt-10 max-w-md rounded-2xl p-8 text-center">
               <p className="text-sm text-muted-foreground">
@@ -110,7 +110,7 @@ export default function ExplorePage() {
           ) : apps.length === 0 ? (
             <div className="glass-panel mx-auto mt-10 max-w-md rounded-2xl p-10 text-center">
               <div className="animate-glow mx-auto flex size-14 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 shadow-xl shadow-black/50">
-                <Sparkles className="size-6 text-white" aria-hidden="true" />
+                <Sparkles className="size-6 text-emerald-950" aria-hidden="true" />
               </div>
               <h2 className="mt-5 font-display text-lg font-semibold">Nothing published yet</h2>
               <p className="mt-2 text-sm text-muted-foreground">
@@ -124,7 +124,7 @@ export default function ExplorePage() {
               </Button>
             </div>
           ) : (
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
               {apps.map((app, i) => (
                 <motion.a
                   key={app.slug}
@@ -135,7 +135,7 @@ export default function ExplorePage() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, margin: "-40px" }}
                   transition={{ duration: 0.5, ease: "easeOut", delay: (i % 3) * 0.06 }}
-                  className={`group overflow-hidden rounded-2xl border border-white/10 bg-card shadow-xl shadow-black/30 transition-all duration-300 hover:-translate-y-1 hover:border-emerald-400/40 hover:shadow-2xl hover:shadow-black/40 ${
+                  className={`luxe-card group overflow-hidden rounded-2xl shadow-xl shadow-black/40 transition-all duration-300 hover:-translate-y-1 hover:border-emerald-400/30! hover:shadow-2xl hover:shadow-black/60 ${
                     i === 0 ? "sm:col-span-2" : ""
                   }`}
                 >
@@ -175,8 +175,8 @@ export default function ExplorePage() {
         </section>
       </main>
 
-      <footer className="mt-auto border-t border-white/5 py-8">
-        <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6">
+      <footer className="mt-auto border-t border-white/5 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-8">
+        <div className="mx-auto flex w-full max-w-6xl flex-col items-center justify-between gap-3 px-5 text-center sm:flex-row sm:px-6 sm:text-left">
           <BrandLogo size={22} />
           <span className="text-sm text-muted-foreground">Built with Z.AI — every app on this page, too.</span>
         </div>

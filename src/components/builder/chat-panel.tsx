@@ -32,7 +32,7 @@ function AssistantAvatar({
         className
       )}
     >
-      {children ?? <Sparkles className="size-3.5 text-white" />}
+      {children ?? <Sparkles className="size-3.5 text-emerald-950" />}
     </span>
   );
 }
@@ -104,7 +104,7 @@ export function ChatPanel({
           {messages.length === 0 && !generating ? (
             <div className="flex flex-col items-center gap-3 py-12 text-center">
               <div className="flex size-12 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 shadow-lg shadow-black/40">
-                <Sparkles className="size-5 text-white" />
+                <Sparkles className="size-5 text-emerald-950" />
               </div>
               <p className="font-display text-sm font-semibold">
                 Describe what to build or change
@@ -182,7 +182,7 @@ export function ChatPanel({
       </ScrollArea>
 
       {/* Input */}
-      <div className="p-3 pb-4">
+      <div className="p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
         <div className="relative rounded-2xl border border-white/10 bg-white/[0.03] transition-colors focus-within:border-emerald-400/50">
           <Textarea
             value={input}
@@ -208,7 +208,7 @@ export function ChatPanel({
             onClick={() => void submit()}
             disabled={generating || sending || !input.trim()}
             aria-label="Send message"
-            className="absolute bottom-2 right-2 size-8 rounded-lg border-0 bg-gradient-to-r from-emerald-400 to-teal-500 p-0 text-white shadow-md shadow-black/40 hover:opacity-90"
+            className="absolute bottom-2 right-2 size-8 rounded-lg border-0 bg-gradient-to-r from-emerald-400 to-teal-500 p-0 text-emerald-950 shadow-md shadow-black/40 hover:opacity-90"
           >
             {sending ? (
               <Loader2 className="size-4 animate-spin" />
@@ -232,7 +232,7 @@ export function ChatPanel({
             )}
             Enhance prompt
           </button>
-          <p className="text-[10px] text-muted-foreground/60">
+          <p className="hidden text-[10px] text-muted-foreground/60 sm:block">
             Enter to send · Shift + Enter for a new line
           </p>
         </div>

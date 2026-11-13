@@ -164,7 +164,7 @@ export function PreviewPanel({
             <div aria-hidden className="absolute inset-0 bg-grid" />
             <div className="relative flex max-w-xs flex-col items-center gap-4 px-6 text-center">
               <div className="animate-glow flex size-16 items-center justify-center rounded-3xl bg-gradient-to-br from-emerald-400 to-teal-500 shadow-xl shadow-black/50">
-                <Sparkles className="size-7 text-white" />
+                <Sparkles className="size-7 text-emerald-950" />
               </div>
               <div>
                 <p className="font-display text-lg font-semibold">

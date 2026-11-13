@@ -193,7 +193,7 @@ export function ProjectCard({
             open();
           }
         }}
-        className="group glass-panel cursor-pointer overflow-hidden rounded-2xl transition-all duration-300 hover:border-emerald-400/30! hover:shadow-xl hover:shadow-black/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="group luxe-card spotlight cursor-pointer overflow-hidden rounded-2xl transition-all duration-300 hover:border-emerald-400/30! hover:shadow-2xl hover:shadow-black/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         {/* Live preview window */}
         <div className="relative aspect-video overflow-hidden bg-zinc-950">

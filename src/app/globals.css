@@ -235,4 +235,85 @@
   background-clip: padding-box;
 }
 
+/* ---------- ambient motion: drifting blueprint grid ---------- */
+@keyframes grid-pan {
+  from { background-position: 0 0; }
+  to   { background-position: 56px 56px; }
+}
+.animate-grid-pan {
+  animation: grid-pan 46s linear infinite;
+}
+
+/* ---------- ambient motion: floating specks (solid, no gradient) ---------- */
+.speck {
+  position: absolute;
+  border-radius: 9999px;
+  opacity: 0;
+  animation: speck-float var(--speck-dur, 10s) ease-in-out var(--speck-delay, 0s) infinite;
+  will-change: transform, opacity;
+}
+.speck-gold { background: oklch(0.81 0.09 85 / 0.55); }
+.speck-mist { background: oklch(1 0 0 / 0.22); }
+@keyframes speck-float {
+  0%, 100% { transform: translateY(0);     opacity: 0.1; }
+  50%      { transform: translateY(-18px); opacity: 0.6; }
+}
+
+/* ---------- slow rotation for decorative sparks ---------- */
+@keyframes spin-slow {
+  to { transform: rotate(360deg); }
+}
+.animate-spin-slow {
+  animation: spin-slow 26s linear infinite;
+}
+
+/* ---------- gentle opacity pulse for status glyphs ---------- */
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.45; }
+}
+.pulse-soft {
+  animation: pulse-soft 2.4s ease-in-out infinite;
+}
+
+/* ---------- nav underline that slides through ---------- */
+.nav-link {
+  position: relative;
+}
+.nav-link::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -6px;
+  height: 1px;
+  width: 100%;
+  background: var(--gold);
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.nav-link:hover::after,
+.nav-link:focus-visible::after {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+
+/* ---------- pause the marquee when the reader looks ---------- */
+.marquee-pausable:hover .animate-marquee {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .speck,
+  .animate-grid-pan,
+  .animate-spin-slow,
+  .animate-marquee,
+  .pulse-soft,
+  .animate-fade-up,
+  .animate-shimmer,
+  .thinking-dot {
+    animation: none !important;
+  }
+}
+
 /* monolith marker */

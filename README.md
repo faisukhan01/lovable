@@ -122,7 +122,7 @@ Create `mini-services/api/.env` (see `.env.example`):
 
 | Variable | What it is |
 |---|---|
-| `DATABASE_URL` | Your PostgreSQL connection string (free tier at [neon.tech](https://neon.tech) works great) |
+| `DATABASE_URL` | Optional. **Leave empty → local SQLite** (`db/lovify.db`) with zero setup. Paste a PostgreSQL connection string (free tier at [neon.tech](https://neon.tech) works great) to go cloud. |
 | `JWT_SECRET` | A long random string for signing tokens |
 | `AI_SERVICE_URL` | `http://localhost:8001` — the Z.AI brain |
 

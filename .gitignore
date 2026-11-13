@@ -17,7 +17,7 @@ __pycache__/
 
 # sandbox runtime artifacts
 *.log
-db/custom.db
+db/*.db
 tests/
 upload/
 tool-results/

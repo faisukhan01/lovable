@@ -44,7 +44,7 @@ export default function PublishedAppPage({
       <div className="fixed inset-0 z-10 flex flex-col items-center justify-center gap-4">
         <BrandLogo size={40} href={null} />
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Loader2 className="size-4 animate-spin text-amber-300" />
+          <Loader2 className="size-4 animate-spin text-gold" />
           Loading app…
         </div>
       </div>
@@ -54,11 +54,11 @@ export default function PublishedAppPage({
   if (!app) {
     return (
       <div className="fixed inset-0 z-10 flex items-center justify-center px-4">
-        <div className="glass-panel w-full max-w-sm rounded-2xl p-8 text-center">
-          <div className="mx-auto flex size-14 items-center justify-center rounded-2xl border border-rose-400/25 bg-rose-500/10">
+        <div className="glass-panel w-full max-w-sm rounded-xl p-8 text-center">
+          <div className="mx-auto flex size-14 items-center justify-center rounded-xl border border-rose-400/25 bg-rose-500/10">
             <AppWindow className="size-6 text-rose-400" />
           </div>
-          <h1 className="mt-5 font-display text-lg font-semibold">
+          <h1 className="mt-5 font-display text-xl tracking-normal">
             This app isn&rsquo;t published (or no longer exists).
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
@@ -66,7 +66,7 @@ export default function PublishedAppPage({
           </p>
           <Button
             asChild
-            className="mt-6 w-full bg-gradient-to-r from-amber-300 to-orange-400 text-neutral-950 shadow-lg shadow-black/40 hover:opacity-90"
+            className="mt-6 w-full"
           >
             <Link href="/">Build your own on Lovify</Link>
           </Button>

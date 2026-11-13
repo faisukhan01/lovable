@@ -43,7 +43,7 @@ const VIBES: { id: string; label: string; directive: string }[] = [
     id: "dark",
     label: "Elegant dark",
     directive:
-      "Design direction: premium dark theme, champagne gold and warm amber gradient accents on a true black canvas, glassmorphism, rich micro-interactions.",
+      "Design direction: premium flat dark theme, true black canvas, refined champagne-gold accents used sparingly, hairline borders, editorial serif display typography, rich micro-interactions.",
   },
   {
     id: "light",
@@ -55,7 +55,7 @@ const VIBES: { id: string; label: string; directive: string }[] = [
     id: "colorful",
     label: "Playful color",
     directive:
-      "Design direction: playful and colorful, bold gradients, rounded shapes, fun animations.",
+      "Design direction: playful and colorful, bold flat color blocks, rounded shapes, fun animations.",
   },
   {
     id: "minimal",
@@ -135,7 +135,7 @@ export function CreateProjectDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-xl">
         <DialogHeader>
-          <DialogTitle className="font-display text-xl">
+          <DialogTitle className="font-display text-2xl tracking-normal">
             Describe your app
           </DialogTitle>
           <DialogDescription>
@@ -169,7 +169,7 @@ export function CreateProjectDialog({
               size="sm"
               onClick={() => void handleEnhance()}
               disabled={enhancing || prompt.trim().length < 8}
-              className="gap-2 border-amber-300/30 bg-amber-400/10 text-amber-100 hover:bg-amber-400/20 hover:text-amber-50"
+              className="gap-2 border-gold/25 bg-gold/10 text-gold hover:bg-gold/20 hover:text-gold"
             >
               {enhancing ? (
                 <Loader2 className="size-3.5 animate-spin" />
@@ -192,11 +192,11 @@ export function CreateProjectDialog({
                 onClick={() => setVibe(vibe === v.id ? null : v.id)}
                 className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs transition-colors ${
                   vibe === v.id
-                    ? "border-amber-300/50 bg-amber-400/20 text-foreground"
-                    : "border-white/10 bg-white/[0.04] text-muted-foreground hover:border-amber-300/40 hover:text-foreground"
+                    ? "border-gold/45 bg-gold/15 text-foreground"
+                    : "border-white/10 bg-white/[0.03] text-muted-foreground hover:border-gold/35 hover:text-foreground"
                 }`}
               >
-                <Palette className="size-3 text-amber-300" />
+                <Palette className="size-3 text-gold" />
                 {v.label}
               </button>
             ))}
@@ -211,9 +211,9 @@ export function CreateProjectDialog({
                   key={ex.title}
                   type="button"
                   onClick={() => setPrompt(ex.prompt)}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:border-amber-300/40 hover:text-foreground"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:border-gold/35 hover:text-foreground"
                 >
-                  <Icon className="size-3.5 text-amber-300" />
+                  <Icon className="size-3.5 text-gold" />
                   {ex.title}
                 </button>
               );
@@ -232,7 +232,6 @@ export function CreateProjectDialog({
           <Button
             onClick={handleCreate}
             disabled={creating || !prompt.trim()}
-            className="bg-gradient-to-r from-amber-300 to-orange-400 text-neutral-950 shadow-lg shadow-black/40 hover:opacity-90"
           >
             {creating ? (
               <Loader2 className="size-4 animate-spin" />

@@ -54,23 +54,23 @@ export type ProjectCardData = ProjectSummary & { html?: string | null };
 function StatusBadge({ status }: { status: ProjectStatus }) {
   if (status === "generating") {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/30 bg-amber-500/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-amber-300">
-        <span className="size-1.5 animate-pulse rounded-full bg-amber-400" />
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-gold/30 bg-gold/10 px-2 py-0.5 font-mono text-[9px] uppercase tracking-[0.16em] text-gold">
+        <span className="size-1.5 animate-pulse rounded-full bg-gold" />
         Generating
       </span>
     );
   }
   if (status === "error") {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full border border-rose-400/30 bg-rose-500/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-rose-300">
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-rose-400/30 bg-rose-500/10 px-2 py-0.5 font-mono text-[9px] uppercase tracking-[0.16em] text-rose-300">
         <span className="size-1.5 rounded-full bg-rose-400" />
         Error
       </span>
     );
   }
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-300/30 bg-amber-400/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-amber-200">
-      <span className="size-1.5 rounded-full bg-amber-300" />
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-gold/25 bg-gold/10 px-2 py-0.5 font-mono text-[9px] uppercase tracking-[0.16em] text-gold">
+      <span className="size-1.5 rounded-full bg-gold" />
       Ready
     </span>
   );
@@ -193,7 +193,7 @@ export function ProjectCard({
             open();
           }
         }}
-        className="group luxe-card spotlight cursor-pointer overflow-hidden rounded-2xl transition-all duration-300 hover:border-amber-300/30! hover:shadow-2xl hover:shadow-black/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="group luxe-card cursor-pointer overflow-hidden rounded-xl transition-colors duration-300 hover:border-white/[0.16] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         {/* Live preview window */}
         <div className="relative aspect-video overflow-hidden bg-zinc-950">
@@ -204,14 +204,14 @@ export function ProjectCard({
                 title={`${project.name} preview`}
                 className="absolute inset-0 h-full w-full"
               />
-              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent" />
+              <div className="pointer-events-none absolute inset-0 bg-black/20 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
             </>
           ) : (
-            <div className="absolute inset-0 bg-gradient-to-br from-amber-400/15 via-orange-400/10 to-rose-400/10" />
+            <div className="absolute inset-0 bg-white/[0.02]" />
           )}
 
           {project.published_slug ? (
-            <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full border border-amber-300/25 bg-neutral-950/70 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-amber-200 backdrop-blur">
+            <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full border border-gold/25 bg-neutral-950/80 px-2 py-0.5 font-mono text-[9px] uppercase tracking-[0.16em] text-gold backdrop-blur">
               <Globe className="size-3" />
               Live
             </span>
@@ -224,7 +224,7 @@ export function ProjectCard({
         {/* Body */}
         <div className="p-4">
           <div className="flex items-start justify-between gap-2">
-            <h3 className="truncate font-display font-semibold">
+            <h3 className="truncate text-[15px] font-semibold">
               {project.name}
             </h3>
             <DropdownMenu>
@@ -317,7 +317,6 @@ export function ProjectCard({
             <Button
               onClick={() => void handleRename()}
               disabled={renaming || !renameValue.trim()}
-              className="bg-gradient-to-r from-amber-300 to-orange-400 text-white hover:opacity-90"
             >
               {renaming ? <Loader2 className="size-4 animate-spin" /> : null}
               Save

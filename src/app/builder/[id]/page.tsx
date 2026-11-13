@@ -309,7 +309,7 @@ export default function BuilderPage({
   if (loadingInitial) {
     return (
       <div className="flex h-screen flex-col items-center justify-center gap-3">
-        <Loader2 className="size-6 animate-spin text-amber-300" />
+        <Loader2 className="size-6 animate-spin text-gold" />
         <p className="text-sm text-muted-foreground">Opening builder…</p>
       </div>
     );
@@ -320,23 +320,23 @@ export default function BuilderPage({
     const unauthenticated = loadError.status === 401;
     return (
       <div className="flex h-screen items-center justify-center px-4">
-        <div className="glass-panel w-full max-w-sm rounded-2xl p-8 text-center">
+        <div className="glass-panel w-full max-w-sm rounded-xl p-8 text-center">
           <div
             className={cn(
-              "mx-auto flex size-14 items-center justify-center rounded-2xl",
+              "mx-auto flex size-14 items-center justify-center rounded-xl",
               notFound || unauthenticated
-                ? "border border-amber-300/25 bg-amber-400/10"
+                ? "border border-gold/25 bg-gold/10"
                 : "border border-rose-400/25 bg-rose-500/10"
             )}
           >
             <FileQuestion
               className={cn(
                 "size-6",
-                notFound || unauthenticated ? "text-amber-200" : "text-rose-400"
+                notFound || unauthenticated ? "text-gold" : "text-rose-400"
               )}
             />
           </div>
-          <h1 className="mt-5 font-display text-lg font-semibold">
+          <h1 className="mt-5 font-display text-xl tracking-normal">
             {notFound
               ? "Project not found"
               : unauthenticated
@@ -357,10 +357,7 @@ export default function BuilderPage({
                 </Link>
               </Button>
             ) : unauthenticated ? (
-              <Button
-                asChild
-                className="bg-gradient-to-r from-amber-300 to-orange-400 text-neutral-950 shadow-lg shadow-black/40 hover:opacity-90"
-              >
+              <Button asChild>
                 <Link href="/auth">Sign in</Link>
               </Button>
             ) : (
@@ -383,7 +380,7 @@ export default function BuilderPage({
   return (
     <div className="flex h-screen flex-col overflow-hidden">
       {/* Header — row 1: identity + publish, row 2 (mobile): scrollable tools */}
-      <header className="shrink-0 border-b border-white/5 bg-background/60 px-2.5 backdrop-blur-xl sm:px-4">
+      <header className="shrink-0 border-b border-white/[0.06] bg-background/60 px-2.5 backdrop-blur-xl sm:px-4">
         <div className="flex h-12 items-center gap-2 sm:h-14 sm:gap-3">
           <Button
             asChild
@@ -397,7 +394,7 @@ export default function BuilderPage({
           </Button>
           <Separator orientation="vertical" className="hidden h-5 sm:block" />
 
-          <span className="truncate max-w-[120px] font-display font-semibold sm:max-w-xs">
+          <span className="truncate max-w-[120px] font-medium sm:max-w-xs">
             {project.name}
           </span>
           <Badge variant="outline" className="shrink-0">
@@ -418,8 +415,8 @@ export default function BuilderPage({
             <Pencil className="size-3.5" />
           </Button>
           {generating ? (
-            <Badge className="hidden shrink-0 border border-amber-400/30 bg-amber-500/10 text-amber-300 hover:bg-amber-500/10 sm:inline-flex">
-              <span className="size-1.5 animate-pulse rounded-full bg-amber-400" />
+            <Badge className="hidden shrink-0 border border-gold/30 bg-gold/10 text-gold hover:bg-gold/10 sm:inline-flex">
+              <span className="size-1.5 animate-pulse rounded-full bg-gold" />
               Building…
             </Badge>
           ) : null}
@@ -482,7 +479,7 @@ export default function BuilderPage({
                         </span>
                       </span>
                       {v.version === project.version ? (
-                        <Check className="size-3.5 shrink-0 text-amber-300" />
+                        <Check className="size-3.5 shrink-0 text-gold" />
                       ) : null}
                     </DropdownMenuItem>
                   );
@@ -549,7 +546,7 @@ export default function BuilderPage({
               size="sm"
               onClick={handlePublish}
               disabled={generating || publishing}
-              className="shrink-0 bg-gradient-to-r from-amber-300 to-orange-400 text-neutral-950 shadow-lg shadow-black/40 hover:opacity-90"
+              className="shrink-0"
             >
               {publishing ? (
                 <Loader2 className="size-4 animate-spin" />
@@ -616,7 +613,7 @@ export default function BuilderPage({
                         </span>
                       </span>
                       {v.version === project.version ? (
-                        <Check className="size-3.5 shrink-0 text-amber-300" />
+                        <Check className="size-3.5 shrink-0 text-gold" />
                       ) : null}
                     </DropdownMenuItem>
                   );
@@ -675,7 +672,7 @@ export default function BuilderPage({
               onSend={handleSend}
             />
           </Panel>
-          <PanelResizeHandle className="relative w-px bg-white/5 transition-colors after:absolute after:inset-y-0 after:left-1/2 after:z-10 after:w-1.5 after:-translate-x-1/2 focus-visible:outline-none data-[resize-handle-active]:bg-amber-300/50" />
+          <PanelResizeHandle className="relative w-px bg-white/[0.06] transition-colors after:absolute after:inset-y-0 after:left-1/2 after:z-10 after:w-1.5 after:-translate-x-1/2 focus-visible:outline-none data-[resize-handle-active]:bg-gold/50" />
           <Panel minSize={30}>
             <PreviewPanel
               project={project}
@@ -690,7 +687,7 @@ export default function BuilderPage({
       ) : (
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           {/* Stacked tabs for small screens */}
-          <div className="flex shrink-0 items-center gap-0.5 border-b border-white/5 px-3 py-2">
+          <div className="flex shrink-0 items-center gap-0.5 border-b border-white/[0.06] px-3 py-2">
             <div className="flex items-center gap-0.5 rounded-lg border border-white/10 bg-white/[0.03] p-0.5">
               <SegBtn
                 active={mobileTab === "chat"}
@@ -736,7 +733,7 @@ export default function BuilderPage({
       <Dialog open={renameOpen} onOpenChange={setRenameOpen}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle className="font-display">Rename app</DialogTitle>
+            <DialogTitle className="font-display text-xl tracking-normal">Rename app</DialogTitle>
             <DialogDescription>
               A clear name helps you find it later on the dashboard.
             </DialogDescription>
@@ -757,7 +754,6 @@ export default function BuilderPage({
             <Button
               onClick={() => void handleRename()}
               disabled={renaming || !renameValue.trim()}
-              className="bg-gradient-to-r from-amber-300 to-orange-400 text-neutral-950 shadow-lg shadow-black/40 hover:opacity-90"
             >
               {renaming ? <Loader2 className="size-4 animate-spin" /> : null}
               Save
@@ -770,9 +766,9 @@ export default function BuilderPage({
       <Dialog open={publishOpen} onOpenChange={setPublishOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 font-display text-xl">
-              <span className="flex size-8 items-center justify-center rounded-lg bg-gradient-to-br from-amber-300 to-amber-500 shadow-md shadow-black/40">
-                <Globe className="size-4 text-neutral-950" />
+            <DialogTitle className="flex items-center gap-2.5 font-display text-2xl tracking-normal">
+              <span className="flex size-8 items-center justify-center rounded-lg border border-white/15 bg-primary">
+                <Globe className="size-4 text-primary-foreground" />
               </span>
               Your app is live
             </DialogTitle>
@@ -795,10 +791,7 @@ export default function BuilderPage({
             <Button variant="ghost" onClick={() => setPublishOpen(false)}>
               Close
             </Button>
-            <Button
-              asChild
-              className="bg-gradient-to-r from-amber-300 to-orange-400 text-neutral-950 shadow-lg shadow-black/40 hover:opacity-90"
-            >
+            <Button asChild>
               <a
                 href={publishFullUrl || "#"}
                 target="_blank"

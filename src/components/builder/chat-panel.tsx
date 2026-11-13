@@ -28,11 +28,11 @@ function AssistantAvatar({
   return (
     <span
       className={cn(
-        "mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-amber-300 to-orange-400 shadow-md shadow-black/40",
+        "mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-lg border border-white/15 bg-primary",
         className
       )}
     >
-      {children ?? <Sparkles className="size-3.5 text-neutral-950" />}
+      {children ?? <Sparkles className="size-3.5 text-primary-foreground" />}
     </span>
   );
 }
@@ -88,12 +88,12 @@ export function ChatPanel({
   }
 
   return (
-    <div className={cn("flex h-full flex-col border-r border-white/5", className)}>
+    <div className={cn("flex h-full flex-col border-r border-white/[0.06]", className)}>
       {/* Panel header */}
-      <div className="flex h-11 shrink-0 items-center gap-2 border-b border-white/5 px-4 text-sm">
-        <Sparkles className="size-4 text-amber-300" />
+      <div className="flex h-11 shrink-0 items-center gap-2 border-b border-white/[0.06] px-4 text-sm">
+        <Sparkles className="size-4 text-gold" />
         <span className="font-medium text-foreground">Lovify AI</span>
-        <span className="text-[10px] uppercase tracking-widest text-muted-foreground/70">
+        <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground/70">
           powered by Z.AI
         </span>
       </div>
@@ -103,10 +103,10 @@ export function ChatPanel({
         <div className="flex min-h-full flex-col gap-3 px-4 py-4">
           {messages.length === 0 && !generating ? (
             <div className="flex flex-col items-center gap-3 py-12 text-center">
-              <div className="flex size-12 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-300 to-orange-400 shadow-lg shadow-black/40">
-                <Sparkles className="size-5 text-neutral-950" />
+              <div className="flex size-12 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04]">
+                <Sparkles className="size-5 text-gold" />
               </div>
-              <p className="font-display text-sm font-semibold">
+              <p className="font-display text-lg tracking-normal">
                 Describe what to build or change
               </p>
               <p className="max-w-[250px] text-xs text-muted-foreground">
@@ -120,7 +120,7 @@ export function ChatPanel({
             m.role === "user" ? (
               <div
                 key={m.id}
-                className="max-w-[85%] self-end whitespace-pre-wrap rounded-2xl rounded-br-md border border-amber-300/20 bg-gradient-to-br from-amber-400/25 to-orange-400/15 px-4 py-2.5 text-sm"
+                className="max-w-[85%] self-end whitespace-pre-wrap rounded-xl rounded-br-md border border-white/10 bg-white/[0.06] px-4 py-2.5 text-sm"
               >
                 {m.content}
               </div>
@@ -140,13 +140,13 @@ export function ChatPanel({
               <AssistantAvatar />
               <div className="glass-panel flex items-center gap-3 rounded-2xl rounded-tl-md px-4 py-3">
                 <span aria-hidden className="flex items-center gap-1">
-                  <span className="thinking-dot size-2 rounded-full bg-amber-300" />
+                  <span className="thinking-dot size-2 rounded-full bg-gold" />
                   <span
-                    className="thinking-dot size-2 rounded-full bg-amber-300"
+                    className="thinking-dot size-2 rounded-full bg-gold"
                     style={{ animationDelay: "0.15s" }}
                   />
                   <span
-                    className="thinking-dot size-2 rounded-full bg-amber-300"
+                    className="thinking-dot size-2 rounded-full bg-gold"
                     style={{ animationDelay: "0.3s" }}
                   />
                 </span>
@@ -158,7 +158,7 @@ export function ChatPanel({
           {/* Error card */}
           {project.status === "error" ? (
             <div className="flex max-w-[92%] self-start gap-2.5">
-              <AssistantAvatar className="border border-rose-400/30 bg-rose-500/15 from-transparent to-transparent shadow-rose-950/30">
+              <AssistantAvatar className="border border-rose-400/30 bg-rose-500/15">
                 <AlertTriangle className="size-3.5 text-rose-400" />
               </AssistantAvatar>
               <div className="min-w-0 flex-1 rounded-2xl rounded-tl-md border border-rose-400/30 bg-rose-500/10 px-4 py-3 text-sm">
@@ -183,7 +183,7 @@ export function ChatPanel({
 
       {/* Input */}
       <div className="p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-        <div className="relative rounded-2xl border border-white/10 bg-white/[0.03] transition-colors focus-within:border-amber-300/50">
+        <div className="relative rounded-xl border border-white/10 bg-white/[0.03] transition-colors focus-within:border-gold/45">
           <Textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -208,7 +208,7 @@ export function ChatPanel({
             onClick={() => void submit()}
             disabled={generating || sending || !input.trim()}
             aria-label="Send message"
-            className="absolute bottom-2 right-2 size-8 rounded-lg border-0 bg-gradient-to-r from-amber-300 to-orange-400 p-0 text-neutral-950 shadow-md shadow-black/40 hover:opacity-90"
+            className="absolute bottom-2 right-2 size-8 rounded-lg p-0"
           >
             {sending ? (
               <Loader2 className="size-4 animate-spin" />
@@ -222,7 +222,7 @@ export function ChatPanel({
             type="button"
             onClick={() => void enhance()}
             disabled={enhancing || generating || input.trim().length < 8}
-            className="inline-flex items-center gap-1.5 rounded-full border border-amber-300/25 bg-amber-400/10 px-2.5 py-1 text-[11px] text-amber-100 transition-colors hover:bg-amber-400/20 disabled:opacity-40"
+            className="inline-flex items-center gap-1.5 rounded-full border border-gold/25 bg-gold/10 px-2.5 py-1 text-[11px] text-gold transition-colors hover:bg-gold/20 disabled:opacity-40"
             title="Let Z.AI rewrite your request into a richer, more specific brief"
           >
             {enhancing ? (

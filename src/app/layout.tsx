@@ -1,22 +1,24 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, JetBrains_Mono, Space_Grotesk } from "next/font/google";
+import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
 import { Toaster } from "sonner";
 import "./globals.css";
 
-const inter = Inter({
-  variable: "--font-inter",
+/* Geist — precise, modern UI face. Instrument Serif — editorial display voice. */
+const geist = Geist({
+  variable: "--font-geist",
   subsets: ["latin"],
 });
 
-const spaceGrotesk = Space_Grotesk({
-  variable: "--font-space-grotesk",
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
 });
 
-const jetbrainsMono = JetBrains_Mono({
-  variable: "--font-jetbrains-mono",
+const instrumentSerif = Instrument_Serif({
+  variable: "--font-instrument",
   subsets: ["latin"],
+  weight: "400",
+  style: ["normal", "italic"],
 });
 
 export const metadata: Metadata = {
@@ -56,16 +58,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`dark ${inter.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable}`} suppressHydrationWarning>
+    <html
+      lang="en"
+      className={`dark ${geist.variable} ${geistMono.variable} ${instrumentSerif.variable}`}
+      suppressHydrationWarning
+    >
       <body className="min-h-screen antialiased bg-background text-foreground">
         {children}
         <Toaster
           position="bottom-right"
           toastOptions={{
             style: {
-              background: "oklch(0.18 0 0)",
+              background: "oklch(0.16 0 0)",
               border: "1px solid oklch(1 0 0 / 10%)",
-              color: "oklch(0.97 0.002 85)",
+              color: "oklch(0.97 0.002 90)",
             },
           }}
         />

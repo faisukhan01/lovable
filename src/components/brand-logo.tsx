@@ -2,9 +2,13 @@
 
 import Link from "next/link";
 
-/** Lovify brand mark: gradient rounded square + wordmark. Used across pages. */
+/**
+ * Lovify brand mark — MONOLITH system.
+ * Flat ivory square, hairline border, single engraved "L" glyph.
+ * Wordmark set in Instrument Serif for an editorial, authored feel.
+ */
 export function BrandLogo({
-  size = 30,
+  size = 28,
   withText = true,
   href = "/",
   className = "",
@@ -17,31 +21,27 @@ export function BrandLogo({
   const inner = (
     <span className={`inline-flex items-center gap-2.5 ${className}`}>
       <span
-        className="relative inline-flex items-center justify-center rounded-[26%] shadow-lg shadow-black/40"
-        style={{
-          width: size,
-          height: size,
-          background: "linear-gradient(135deg, #fde68a 0%, #f2b95c 55%, #ee8f4e 100%)",
-        }}
+        className="inline-flex items-center justify-center rounded-[22%] border border-white/15 bg-primary"
+        style={{ width: size, height: size }}
       >
         <svg
           viewBox="0 0 64 64"
-          width={size * 0.62}
-          height={size * 0.62}
+          width={size * 0.58}
+          height={size * 0.58}
           fill="none"
-          stroke="#141210"
+          stroke="oklch(0.145 0 0)"
           strokeWidth={9}
-          strokeLinecap="round"
-          strokeLinejoin="round"
+          strokeLinecap="square"
+          strokeLinejoin="miter"
           aria-hidden="true"
         >
-          <path d="M20 20h24L26 44h20" />
+          <path d="M22 16v32h22" />
         </svg>
       </span>
       {withText ? (
         <span
-          className="font-display font-bold tracking-tight text-foreground"
-          style={{ fontSize: size * 0.72 }}
+          className="font-display leading-none text-foreground"
+          style={{ fontSize: size * 0.93, letterSpacing: "0.01em" }}
         >
           Lovify
         </span>
@@ -51,7 +51,11 @@ export function BrandLogo({
 
   if (!href) return inner;
   return (
-    <Link href={href} aria-label="Lovify home" className="outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-lg">
+    <Link
+      href={href}
+      aria-label="Lovify home"
+      className="rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-ring"
+    >
       {inner}
     </Link>
   );

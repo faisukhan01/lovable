@@ -11,9 +11,32 @@ from sqlalchemy import (
     String,
     Text,
     UniqueConstraint,
+    types,
 )
 
 from database import Base
+
+
+class TZDateTime(types.TypeDecorator):
+    """Timezone-safe DateTime that behaves identically on PostgreSQL and SQLite.
+
+    SQLite drops tzinfo, which made `datetime.now(utc) - project.updated_at`
+    crash with "can't subtract offset-naive and offset-aware datetimes".
+    This decorator always stores naive-UTC and returns aware-UTC.
+    """
+
+    impl = DateTime
+    cache_ok = True
+
+    def process_bind_param(self, value, _dialect):  # noqa: ANN001
+        if value is not None and value.tzinfo is not None:
+            value = value.astimezone(timezone.utc).replace(tzinfo=None)
+        return value
+
+    def process_result_value(self, value, _dialect):  # noqa: ANN001
+        if value is not None and value.tzinfo is None:
+            value = value.replace(tzinfo=timezone.utc)
+        return value
 
 
 def _uid() -> str:
@@ -31,7 +54,7 @@ class User(Base):
     email = Column(String(255), unique=True, nullable=False, index=True)
     name = Column(String(120), nullable=True)
     password_hash = Column(String(255), nullable=False)
-    created_at = Column(DateTime(timezone=True), default=_now, nullable=False)
+    created_at = Column(TZDateTime(), default=_now, nullable=False)
 
 
 class Project(Base):
@@ -48,9 +71,9 @@ class Project(Base):
     error = Column(Text, nullable=True)
     version = Column(Integer, default=0, nullable=False)
     published_slug = Column(String(120), unique=True, nullable=True, index=True)
-    published_at = Column(DateTime(timezone=True), nullable=True)
-    created_at = Column(DateTime(timezone=True), default=_now, nullable=False)
-    updated_at = Column(DateTime(timezone=True), default=_now, nullable=False)
+    published_at = Column(TZDateTime(), nullable=True)
+    created_at = Column(TZDateTime(), default=_now, nullable=False)
+    updated_at = Column(TZDateTime(), default=_now, nullable=False)
 
 
 class Message(Base):
@@ -61,7 +84,7 @@ class Message(Base):
     # user | assistant
     role = Column(String(20), nullable=False)
     content = Column(Text, nullable=False)
-    created_at = Column(DateTime(timezone=True), default=_now, nullable=False)
+    created_at = Column(TZDateTime(), default=_now, nullable=False)
 
 
 class ProjectVersion(Base):
@@ -73,4 +96,4 @@ class ProjectVersion(Base):
     version = Column(Integer, nullable=False)
     html = Column(Text, nullable=False)
     label = Column(Text, default="")
-    created_at = Column(DateTime(timezone=True), default=_now, nullable=False)
+    created_at = Column(TZDateTime(), default=_now, nullable=False)

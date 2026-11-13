@@ -41,7 +41,6 @@ class Settings(BaseSettings):
 
 settings = Settings()
 
-if not settings.database_url:
-    raise RuntimeError(
-        "DATABASE_URL is not set. Create mini-services/api/.env (see .env.example)."
-    )
+# DATABASE_URL may be empty: database.py falls back to local SQLite (db/lovify.db)
+# so the platform runs out of the box. Set DATABASE_URL in mini-services/api/.env
+# to switch to Neon PostgreSQL — no code changes needed.

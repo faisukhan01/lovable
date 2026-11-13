@@ -17,9 +17,14 @@ PROJECT_ROOT = BASE_DIR.parent.parent  # /home/z/my-project
 
 raw_url = settings.database_url.strip()
 
-IS_SQLITE = not raw_url  # no DATABASE_URL configured -> local SQLite
+# The sandbox platform injects SQLite URLs in Prisma's "file:" style
+# (e.g. "file:/home/z/my-project/db/custom.db"). Normalize to SQLAlchemy.
+if raw_url.startswith("file:"):
+    raw_url = "sqlite:///" + raw_url[len("file:"):]
 
-if IS_SQLITE:
+IS_SQLITE = (not raw_url) or raw_url.startswith("sqlite")
+
+if IS_SQLITE and not raw_url:
     db_dir = PROJECT_ROOT / "db"
     db_dir.mkdir(parents=True, exist_ok=True)
     raw_url = f"sqlite:///{db_dir / 'lovify.db'}"

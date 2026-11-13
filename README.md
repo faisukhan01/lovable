@@ -1,27 +1,28 @@
 <div align="center">
 
-<img src="https://capsule-render.vercel.app/api?type=waving&color=0:0d1117,50:10b981,100:34d399&height=230&section=header&text=Lovify&fontSize=88&fontColor=ffffff&fontAlignY=34&desc=Prompt%20it.%20Build%20it.%20Ship%20it.&descSize=20&descAlignY=56&descColor=6ee7b7&animation=twinkling" width="100%" alt="Lovify banner" />
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:050505,40:f2b95c,100:ee8f4e&height=230&section=header&text=Lovify&fontSize=88&fontColor=f8f2dc&fontAlignY=34&desc=Prompt%20it.%20Build%20it.%20Ship%20it.&descSize=20&descAlignY=56&descColor=f2b95c&animation=twinkling" width="100%" alt="Lovify banner" />
 
 <!-- typewriter line -->
 <a href="https://github.com/faisukhan01/lovable">
-  <img src="https://readme-typing-svg.demolab.com?font=Space+Grotesk:wght@600&size=26&duration=2800&pause=900&color=34D399&center=true&vCenter=true&random=false&width=760&lines=Describe+an+app+in+plain+English...;Watch+Z.AI+design+%26+code+it+live...;Iterate+by+just+talking+to+it...;Publish+to+the+world+in+one+click." alt="Typing SVG" />
+  <img src="https://readme-typing-svg.demolab.com?font=Space+Grotesk:wght@600&size=26&duration=2800&pause=900&color=F2B95C&center=true&vCenter=true&random=false&width=760&lines=Describe+an+app+in+plain+English...;Watch+Z.AI+design+%26+code+it+live...;Iterate+by+just+talking+to+it...;Publish+to+the+world+in+one+click." alt="Typing SVG" />
 </a>
 
 **The open-source AI app-builder platform — a Lovable & Base44 alternative, powered by Z.AI as the brain behind every feature.**
 
-[![Next.js 16](https://img.shields.io/badge/Next.js-16-black?style=for-the-badge&logo=next.js)](https://nextjs.org)
-[![FastAPI](https://img.shields.io/badge/FastAPI-backend-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org)
-[![SQLAlchemy 2](https://img.shields.io/badge/SQLAlchemy-2.x-D71F00?style=for-the-badge&logo=sqlalchemy&logoColor=white)](https://www.sqlalchemy.org)
-[![Z.AI](https://img.shields.io/badge/Brain-Z.AI-10b981?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMTAiIGZpbGw9IiMxMGI5ODEiLz48L3N2Zz4=)](https://z.ai)
-[![Tailwind CSS 4](https://img.shields.io/badge/Tailwind_CSS-4-38bdf8?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
-[![License](https://img.shields.io/badge/License-MIT-34d399?style=for-the-badge&logo=opensourceinitiative&logoColor=white)](LICENSE)
+[![Next.js 16](https://img.shields.io/badge/Next.js-16-f2b95c?style=for-the-badge&logo=next.js&logoColor=black&labelColor=0a0a0a)](https://nextjs.org)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-f2b95c?style=for-the-badge&logo=typescript&logoColor=black&labelColor=0a0a0a)](https://www.typescriptlang.org)
+[![FastAPI](https://img.shields.io/badge/FastAPI-backend-ee8f4e?style=for-the-badge&logo=fastapi&logoColor=white&labelColor=0a0a0a)](https://fastapi.tiangolo.com)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-database-4169E1?style=for-the-badge&logo=postgresql&logoColor=white&labelColor=0a0a0a)](https://www.postgresql.org)
+[![SQLAlchemy 2](https://img.shields.io/badge/SQLAlchemy-2.x-D71F00?style=for-the-badge&logo=sqlalchemy&logoColor=white&labelColor=0a0a0a)](https://www.sqlalchemy.org)
+[![Z.AI](https://img.shields.io/badge/Brain-Z.AI-f2b95c?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMTAiIGZpbGw9IiNmMmI5NWMiLz48L3N2Zz4=&labelColor=0a0a0a)](https://z.ai)
+[![Tailwind CSS 4](https://img.shields.io/badge/Tailwind_CSS-4-38bdf8?style=for-the-badge&logo=tailwindcss&logoColor=white&labelColor=0a0a0a)](https://tailwindcss.com)
+[![License](https://img.shields.io/badge/License-MIT-f2b95c?style=for-the-badge&logo=opensourceinitiative&logoColor=black&labelColor=0a0a0a)](LICENSE)
 
 [Features](#-features) · [Tech Stack](#%EF%B8%8F-tech-stack) · [Architecture](#-architecture) · [Quickstart](#-quickstart) · [API](#-api-reference) · [Screenshots](#-screenshots)
 
 <br/>
 
-<img src="docs/screenshots/landing.png" width="92%" alt="Lovify landing page — the Void Black hero with the mint prompt box" />
+<img src="docs/screenshots/hero.png" width="92%" alt="Lovify landing page — the Onyx Noir hero with the champagne-gold gradient headline" />
 
 <br/><br/>
 
@@ -54,13 +55,14 @@ No boilerplate. No config. No servers. Just describe.
 | 🔐 | **Auth & accounts** | JWT auth with bcrypt hashing on a real PostgreSQL database |
 | 📊 | **Real thumbnails** | Dashboard and gallery render actual live previews of your apps |
 | 📱 | **Fully responsive** | Mobile-first across every page — builder included (chat ⇄ preview tabs, scrollable toolbars) |
+| 🖤 | **Onyx Noir design** | A true pure-black canvas with champagne-gold accents, glass panels, aurora motion and film-grain depth |
 
 ## ⚙️ Tech Stack
 
 | Layer | Technology | Why |
 |---|---|---|
 | **Frontend** | [Next.js 16](https://nextjs.org) (App Router) + TypeScript 5 | Server components, streaming, zero-config routing |
-| **UI System** | Tailwind CSS 4 + shadcn/ui + Framer Motion | The "Void Black" design system — pure-black glass, mint accents, spotlight hovers |
+| **UI System** | Tailwind CSS 4 + shadcn/ui + Framer Motion | The "Onyx Noir" design system — pure-black glass, champagne-gold accents, spotlight hovers |
 | **Backend** | [FastAPI](https://fastapi.tiangolo.com) + Python 3.12 | Async-ready REST API, background task pipeline for AI builds |
 | **ORM** | SQLAlchemy 2 (typed, 2.0-style) | `TZDateTime`-safe columns, portable across SQLite and PostgreSQL |
 | **Database** | **PostgreSQL** (SQLAlchemy engine) | Production-grade relational store — users, projects, messages, versions. Free cloud hosting via [Neon](https://neon.tech); falls back to local **SQLite** when `DATABASE_URL` is unset |
@@ -175,13 +177,21 @@ Tables are created automatically on first boot — on **PostgreSQL** or SQLite, 
 
 ## Screenshots
 
-| Builder — chat + live preview | Dashboard — live thumbnails |
+| Landing — Onyx Noir hero | Builder — chat + live preview |
 |---|---|
-| <img src="docs/screenshots/builder.png" width="100%" alt="Builder with chat panel and live app preview on the Void Black theme"/> | <img src="docs/screenshots/dashboard.png" width="100%" alt="Dashboard with live app thumbnails"/> |
+| <img src="docs/screenshots/hero.png" width="100%" alt="Landing page hero with champagne-gold gradient headline"/> | <img src="docs/screenshots/builder.png" width="100%" alt="Builder with chat panel and live app preview"/> |
 
-| Landing — Void Black hero | Explore — public gallery |
+| Dashboard — live thumbnails | Explore — public gallery |
 |---|---|
-| <img src="docs/screenshots/landing.png" width="100%" alt="Landing page hero"/> | <img src="docs/screenshots/explore.png" width="100%" alt="Explore gallery with live previews"/> |
+| <img src="docs/screenshots/dashboard.png" width="100%" alt="Dashboard with live app thumbnails"/> | <img src="docs/screenshots/explore.png" width="100%" alt="Explore gallery with live previews"/> |
+
+| Describe your app | Published app + badge |
+|---|---|
+| <img src="docs/screenshots/create.png" width="100%" alt="Create project dialog with design vibes"/> | <img src="docs/screenshots/published.png" width="100%" alt="Published app with Built with Lovify badge"/> |
+
+| Auth — sign in / sign up | Builder on mobile |
+|---|---|
+| <img src="docs/screenshots/auth.png" width="100%" alt="Auth page with gold sign-in button"/> | <img src="docs/screenshots/builder-mobile.png" width="70%" alt="Builder collapsed to chat tabs on mobile"/> |
 
 ## How the AI builds apps
 
@@ -197,7 +207,7 @@ Tables are created automatically on first boot — on **PostgreSQL** or SQLite, 
 - [x] Publish + Explore gallery
 - [x] Prompt enhancer + design vibes
 - [x] Fork + HTML export
-- [x] Premium "Void Black" responsive redesign
+- [x] Premium "Onyx Noir" responsive redesign — pure black + champagne gold
 - [ ] Streaming builds (token-level progress)
 - [ ] Multi-file project export
 - [ ] GitHub sync for generated apps
@@ -205,11 +215,11 @@ Tables are created automatically on first boot — on **PostgreSQL** or SQLite, 
 
 ## Contributing & License
 
-PRs are welcome — the stack is Next.js 16 + TypeScript on the front, FastAPI + SQLAlchemy on the back, Bun for the AI service. MIT licensed.
+PRs are welcome — the stack is Next.js 16 + TypeScript on the front, FastAPI + SQLAlchemy + PostgreSQL on the back, Bun for the AI service. MIT licensed.
 
 <div align="center">
 
-<img src="https://capsule-render.vercel.app/api?type=waving&color=0:34d399,50:10b981,100:0d1117&height=140&section=footer&text=Built%20with%20Z.AI%20%E2%80%94%20one%20prompt%20at%20a%20time&fontSize=22&fontColor=ffffff&animation=twinkling" width="100%" alt="footer" />
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:ee8f4e,60:f2b95c,100:050505&height=140&section=footer&text=Built%20with%20Z.AI%20%E2%80%94%20one%20prompt%20at%20a%20time&fontSize=22&fontColor=0a0a0a&animation=twinkling" width="100%" alt="footer" />
 
 ⭐ Star the repo if Lovify inspired you — it helps a lot!
 

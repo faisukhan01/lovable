@@ -69,8 +69,8 @@ function StatusBadge({ status }: { status: ProjectStatus }) {
     );
   }
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-emerald-300">
-      <span className="size-1.5 rounded-full bg-emerald-400" />
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-300/30 bg-amber-400/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-amber-200">
+      <span className="size-1.5 rounded-full bg-amber-300" />
       Ready
     </span>
   );
@@ -193,7 +193,7 @@ export function ProjectCard({
             open();
           }
         }}
-        className="group luxe-card spotlight cursor-pointer overflow-hidden rounded-2xl transition-all duration-300 hover:border-emerald-400/30! hover:shadow-2xl hover:shadow-black/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="group luxe-card spotlight cursor-pointer overflow-hidden rounded-2xl transition-all duration-300 hover:border-amber-300/30! hover:shadow-2xl hover:shadow-black/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         {/* Live preview window */}
         <div className="relative aspect-video overflow-hidden bg-zinc-950">
@@ -207,11 +207,11 @@ export function ProjectCard({
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent" />
             </>
           ) : (
-            <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/15 via-teal-500/10 to-lime-500/10" />
+            <div className="absolute inset-0 bg-gradient-to-br from-amber-400/15 via-orange-400/10 to-rose-400/10" />
           )}
 
           {project.published_slug ? (
-            <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full border border-emerald-400/25 bg-emerald-950/70 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-emerald-300 backdrop-blur">
+            <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full border border-amber-300/25 bg-neutral-950/70 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-amber-200 backdrop-blur">
               <Globe className="size-3" />
               Live
             </span>
@@ -317,7 +317,7 @@ export function ProjectCard({
             <Button
               onClick={() => void handleRename()}
               disabled={renaming || !renameValue.trim()}
-              className="bg-gradient-to-r from-emerald-400 to-teal-500 text-white hover:opacity-90"
+              className="bg-gradient-to-r from-amber-300 to-orange-400 text-white hover:opacity-90"
             >
               {renaming ? <Loader2 className="size-4 animate-spin" /> : null}
               Save

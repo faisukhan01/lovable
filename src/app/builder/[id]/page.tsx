@@ -309,7 +309,7 @@ export default function BuilderPage({
   if (loadingInitial) {
     return (
       <div className="flex h-screen flex-col items-center justify-center gap-3">
-        <Loader2 className="size-6 animate-spin text-emerald-400" />
+        <Loader2 className="size-6 animate-spin text-amber-300" />
         <p className="text-sm text-muted-foreground">Opening builder…</p>
       </div>
     );
@@ -325,14 +325,14 @@ export default function BuilderPage({
             className={cn(
               "mx-auto flex size-14 items-center justify-center rounded-2xl",
               notFound || unauthenticated
-                ? "border border-emerald-400/25 bg-emerald-500/10"
+                ? "border border-amber-300/25 bg-amber-400/10"
                 : "border border-rose-400/25 bg-rose-500/10"
             )}
           >
             <FileQuestion
               className={cn(
                 "size-6",
-                notFound || unauthenticated ? "text-emerald-300" : "text-rose-400"
+                notFound || unauthenticated ? "text-amber-200" : "text-rose-400"
               )}
             />
           </div>
@@ -359,7 +359,7 @@ export default function BuilderPage({
             ) : unauthenticated ? (
               <Button
                 asChild
-                className="bg-gradient-to-r from-emerald-400 to-teal-500 text-emerald-950 shadow-lg shadow-black/40 hover:opacity-90"
+                className="bg-gradient-to-r from-amber-300 to-orange-400 text-neutral-950 shadow-lg shadow-black/40 hover:opacity-90"
               >
                 <Link href="/auth">Sign in</Link>
               </Button>
@@ -482,7 +482,7 @@ export default function BuilderPage({
                         </span>
                       </span>
                       {v.version === project.version ? (
-                        <Check className="size-3.5 shrink-0 text-emerald-400" />
+                        <Check className="size-3.5 shrink-0 text-amber-300" />
                       ) : null}
                     </DropdownMenuItem>
                   );
@@ -549,7 +549,7 @@ export default function BuilderPage({
               size="sm"
               onClick={handlePublish}
               disabled={generating || publishing}
-              className="shrink-0 bg-gradient-to-r from-emerald-400 to-teal-500 text-emerald-950 shadow-lg shadow-black/40 hover:opacity-90"
+              className="shrink-0 bg-gradient-to-r from-amber-300 to-orange-400 text-neutral-950 shadow-lg shadow-black/40 hover:opacity-90"
             >
               {publishing ? (
                 <Loader2 className="size-4 animate-spin" />
@@ -616,7 +616,7 @@ export default function BuilderPage({
                         </span>
                       </span>
                       {v.version === project.version ? (
-                        <Check className="size-3.5 shrink-0 text-emerald-400" />
+                        <Check className="size-3.5 shrink-0 text-amber-300" />
                       ) : null}
                     </DropdownMenuItem>
                   );
@@ -675,7 +675,7 @@ export default function BuilderPage({
               onSend={handleSend}
             />
           </Panel>
-          <PanelResizeHandle className="relative w-px bg-white/5 transition-colors after:absolute after:inset-y-0 after:left-1/2 after:z-10 after:w-1.5 after:-translate-x-1/2 focus-visible:outline-none data-[resize-handle-active]:bg-emerald-400/50" />
+          <PanelResizeHandle className="relative w-px bg-white/5 transition-colors after:absolute after:inset-y-0 after:left-1/2 after:z-10 after:w-1.5 after:-translate-x-1/2 focus-visible:outline-none data-[resize-handle-active]:bg-amber-300/50" />
           <Panel minSize={30}>
             <PreviewPanel
               project={project}
@@ -757,7 +757,7 @@ export default function BuilderPage({
             <Button
               onClick={() => void handleRename()}
               disabled={renaming || !renameValue.trim()}
-              className="bg-gradient-to-r from-emerald-400 to-teal-500 text-emerald-950 shadow-lg shadow-black/40 hover:opacity-90"
+              className="bg-gradient-to-r from-amber-300 to-orange-400 text-neutral-950 shadow-lg shadow-black/40 hover:opacity-90"
             >
               {renaming ? <Loader2 className="size-4 animate-spin" /> : null}
               Save
@@ -771,8 +771,8 @@ export default function BuilderPage({
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 font-display text-xl">
-              <span className="flex size-8 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-400 to-emerald-600 shadow-md shadow-black/40">
-                <Globe className="size-4 text-emerald-950" />
+              <span className="flex size-8 items-center justify-center rounded-lg bg-gradient-to-br from-amber-300 to-amber-500 shadow-md shadow-black/40">
+                <Globe className="size-4 text-neutral-950" />
               </span>
               Your app is live
             </DialogTitle>
@@ -797,7 +797,7 @@ export default function BuilderPage({
             </Button>
             <Button
               asChild
-              className="bg-gradient-to-r from-emerald-400 to-teal-500 text-emerald-950 shadow-lg shadow-black/40 hover:opacity-90"
+              className="bg-gradient-to-r from-amber-300 to-orange-400 text-neutral-950 shadow-lg shadow-black/40 hover:opacity-90"
             >
               <a
                 href={publishFullUrl || "#"}

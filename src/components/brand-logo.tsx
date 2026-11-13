@@ -21,7 +21,7 @@ export function BrandLogo({
         style={{
           width: size,
           height: size,
-          background: "linear-gradient(135deg, #34d399 0%, #14b8a6 55%, #a3e635 100%)",
+          background: "linear-gradient(135deg, #fde68a 0%, #f2b95c 55%, #ee8f4e 100%)",
         }}
       >
         <svg
@@ -29,7 +29,7 @@ export function BrandLogo({
           width={size * 0.62}
           height={size * 0.62}
           fill="none"
-          stroke="#0c1210"
+          stroke="#141210"
           strokeWidth={9}
           strokeLinecap="round"
           strokeLinejoin="round"

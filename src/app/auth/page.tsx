@@ -94,8 +94,8 @@ function AuthPanel() {
       {/* --------------------------- left showcase --------------------------- */}
       <div className="relative hidden flex-col justify-center overflow-hidden border-r border-white/5 px-14 lg:flex">
         <div aria-hidden="true" className="pointer-events-none absolute inset-0">
-          <div className="aurora-blob animate-aurora -left-32 -top-24 h-[480px] w-[480px] bg-emerald-500/20" />
-          <div className="aurora-blob animate-aurora-slow -bottom-32 -right-24 h-[520px] w-[520px] bg-teal-500/25" />
+          <div className="aurora-blob animate-aurora -left-32 -top-24 h-[480px] w-[480px] bg-amber-400/20" />
+          <div className="aurora-blob animate-aurora-slow -bottom-32 -right-24 h-[520px] w-[520px] bg-orange-400/25" />
           <div className="absolute inset-0 bg-grid" />
         </div>
 
@@ -113,8 +113,8 @@ function AuthPanel() {
           <ul className="mt-10 space-y-3">
             {PERKS.map((perk) => (
               <li key={perk} className="flex items-center gap-2.5 text-sm text-muted-foreground">
-                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-500/15">
-                  <Check className="h-3 w-3 text-emerald-400" aria-hidden="true" />
+                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-400/15">
+                  <Check className="h-3 w-3 text-amber-300" aria-hidden="true" />
                 </span>
                 {perk}
               </li>
@@ -179,7 +179,7 @@ function AuthPanel() {
                   <Button
                     type="submit"
                     disabled={loading}
-                    className="h-11 w-full bg-gradient-to-r from-emerald-400 to-teal-500 text-emerald-950 shadow-lg shadow-black/30 hover:brightness-110"
+                    className="h-11 w-full bg-gradient-to-r from-amber-300 to-orange-400 text-neutral-950 shadow-lg shadow-black/30 hover:brightness-110"
                   >
                     {loading && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
                     {loading ? "Signing in…" : "Sign in"}
@@ -231,7 +231,7 @@ function AuthPanel() {
                   <Button
                     type="submit"
                     disabled={loading}
-                    className="h-11 w-full bg-gradient-to-r from-emerald-400 to-teal-500 text-emerald-950 shadow-lg shadow-black/30 hover:brightness-110"
+                    className="h-11 w-full bg-gradient-to-r from-amber-300 to-orange-400 text-neutral-950 shadow-lg shadow-black/30 hover:brightness-110"
                   >
                     {loading && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
                     {loading ? "Creating account…" : "Create account"}
@@ -260,7 +260,7 @@ function AuthPanel() {
           aria-live="polite"
           className="fixed inset-0 z-[100] flex flex-col items-center justify-center gap-4 bg-background/95 backdrop-blur"
         >
-          <Loader2 className="h-8 w-8 animate-spin text-emerald-400" aria-hidden="true" />
+          <Loader2 className="h-8 w-8 animate-spin text-amber-300" aria-hidden="true" />
           <p className="font-display text-lg text-muted-foreground">Spinning up your app…</p>
         </div>
       ) : null}

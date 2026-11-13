@@ -490,7 +490,6 @@ export default function BuilderPage({
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab, versionsKey]);
 
   /* --------------------------------- Screens -------------------------------- */

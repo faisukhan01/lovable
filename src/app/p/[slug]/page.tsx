@@ -2,11 +2,14 @@
 
 import { use, useEffect, useState } from "react";
 import Link from "next/link";
-import { AppWindow, Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { AppWindow, Eye, GitFork, Heart, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 import { BrandLogo } from "@/components/brand-logo";
 import { Button } from "@/components/ui/button";
-import { getPublishedApp } from "@/lib/api";
+import { ApiError, getPublishedApp, remixApp, toggleLike } from "@/lib/api";
+import { useAuthStore } from "@/lib/store";
 import type { PublishedApp } from "@/lib/types";
 
 export default function PublishedAppPage({
@@ -15,20 +18,28 @@ export default function PublishedAppPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = use(params);
+  const router = useRouter();
   const [state, setState] = useState<{
     slug: string;
     app: PublishedApp | null;
     failed: boolean;
   }>({ slug, app: null, failed: false });
+  const [liked, setLiked] = useState(false);
+  const [likes, setLikes] = useState(0);
+  const [remixing, setRemixing] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     getPublishedApp(slug)
       .then((a) => {
-        if (!cancelled) setState({ slug, app: a, failed: false });
+        if (cancelled) return;
+        setState({ slug, app: a, failed: false });
+        setLikes(a.likes ?? 0);
+        setLiked(false);
       })
       .catch(() => {
-        if (!cancelled) setState({ slug, app: null, failed: true });
+        if (cancelled) return;
+        setState({ slug, app: null, failed: true });
       });
     return () => {
       cancelled = true;
@@ -38,6 +49,49 @@ export default function PublishedAppPage({
   const loading = state.slug !== slug || (!state.app && !state.failed);
   const app = state.slug === slug ? state.app : null;
   const failed = state.slug === slug && state.failed;
+
+  async function handleLike() {
+    if (!useAuthStore.getState().token) {
+      toast("Sign in to like apps");
+      router.push("/auth");
+      return;
+    }
+    const prevLiked = liked;
+    const prevLikes = likes;
+    const nextLiked = !prevLiked;
+
+    /* optimistic flip */
+    setLiked(nextLiked);
+    setLikes(Math.max(0, prevLikes + (nextLiked ? 1 : -1)));
+
+    try {
+      const res = await toggleLike(slug);
+      setLiked(res.liked);
+      setLikes(res.likes);
+    } catch (err) {
+      /* revert on failure */
+      setLiked(prevLiked);
+      setLikes(prevLikes);
+      toast.error(err instanceof ApiError ? err.message : "Could not update like");
+    }
+  }
+
+  async function handleRemix() {
+    if (remixing) return;
+    if (!useAuthStore.getState().token) {
+      router.push("/auth");
+      return;
+    }
+    setRemixing(true);
+    try {
+      const res = await remixApp(slug);
+      toast.success("Remixed — opening your copy");
+      router.push(`/builder/${res.id}`);
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Remix failed. Please try again.");
+      setRemixing(false);
+    }
+  }
 
   if (loading) {
     return (
@@ -75,6 +129,8 @@ export default function PublishedAppPage({
     );
   }
 
+  const author = app.author ?? "builder";
+
   return (
     <>
       {/* The published app itself */}
@@ -87,6 +143,51 @@ export default function PublishedAppPage({
         />
       </div>
 
+      {/* Floating action bar */}
+      <div className="glass-panel fixed right-4 top-4 z-50 flex max-w-[calc(100vw-2rem)] flex-wrap justify-end gap-2 rounded-full px-2 py-1.5">
+        <button
+          type="button"
+          aria-pressed={liked}
+          aria-label={liked ? `Unlike ${app.name}` : `Like ${app.name}`}
+          onClick={() => void handleLike()}
+          className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs transition-colors ${
+            liked
+              ? "border border-gold/30 bg-gold/10 text-gold"
+              : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          <Heart className={`size-3.5 ${liked ? "fill-current" : ""}`} aria-hidden="true" />
+          {likes}
+        </button>
+        <span className="inline-flex items-center gap-1.5 rounded-full px-2 py-1.5 text-xs text-muted-foreground">
+          <Eye className="size-3.5" aria-hidden="true" />
+          {app.views ?? 0}
+        </span>
+        <button
+          type="button"
+          onClick={() => void handleRemix()}
+          disabled={remixing}
+          className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3.5 py-1.5 text-xs font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
+        >
+          {remixing ? (
+            <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
+          ) : (
+            <GitFork className="size-3.5" aria-hidden="true" />
+          )}
+          Remix
+        </button>
+        <span className="inline-flex items-center px-1.5 py-1.5 text-xs text-muted-foreground">
+          <a
+            href={`/u/${author}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="transition-colors hover:text-foreground"
+          >
+            @{author}
+          </a>
+        </span>
+      </div>
+
       {/* Floating Lovify badge */}
       <a
         href="/"
@@ -95,9 +196,15 @@ export default function PublishedAppPage({
         className="glass-panel fixed bottom-4 right-4 z-50 flex items-center gap-2 rounded-full py-2 pl-3 pr-4 text-xs text-muted-foreground shadow-lg transition-colors hover:text-foreground"
       >
         <BrandLogo size={18} withText={false} href={null} />
-        <span>
-          Built with <span className="font-medium text-foreground">Lovify</span>
-        </span>
+        {app.author_name ? (
+          <span>
+            Built by <span className="font-medium text-foreground">{app.author_name}</span> · Lovify
+          </span>
+        ) : (
+          <span>
+            Built with <span className="font-medium text-foreground">Lovify</span>
+          </span>
+        )}
       </a>
     </>
   );

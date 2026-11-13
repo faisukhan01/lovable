@@ -202,22 +202,32 @@ export function CreateProjectDialog({
             ))}
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs text-muted-foreground">Try one:</span>
-            {EXAMPLE_PROMPTS.slice(0, 3).map((ex) => {
-              const Icon = CHIP_ICONS[ex.icon] ?? Sparkles;
-              return (
-                <button
-                  key={ex.title}
-                  type="button"
-                  onClick={() => setPrompt(ex.prompt)}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:border-gold/35 hover:text-foreground"
-                >
-                  <Icon className="size-3.5 text-gold" />
-                  {ex.title}
-                </button>
-              );
-            })}
+          {/* templates */}
+          <div className="space-y-2">
+            <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+              Start from a template
+            </span>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+              {EXAMPLE_PROMPTS.map((ex) => {
+                const Icon = CHIP_ICONS[ex.icon] ?? Sparkles;
+                return (
+                  <button
+                    key={ex.title}
+                    type="button"
+                    onClick={() => setPrompt(ex.prompt)}
+                    className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3 text-left transition-colors hover:border-gold/35"
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <Icon className="size-3.5 shrink-0 text-gold" />
+                      <span className="truncate text-xs font-medium">{ex.title}</span>
+                    </span>
+                    <span className="mt-1 line-clamp-2 block text-[11px] leading-snug text-muted-foreground">
+                      {ex.prompt}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
 

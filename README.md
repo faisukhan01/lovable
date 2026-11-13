@@ -8,6 +8,7 @@
 </a>
 
 **The open-source AI app-builder platform — a Lovable & Base44 alternative, powered by Z.AI as the brain behind every feature.**
+**30+ features**: prompt-to-app · chat-only AI · Ask & Plan modes · version diffs · remix · likes · profiles · ⌘K palette.
 
 [![Next.js 16](https://img.shields.io/badge/Next.js-16-f2b95c?style=for-the-badge&logo=next.js&logoColor=black&labelColor=0a0a0a)](https://nextjs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-f2b95c?style=for-the-badge&logo=typescript&logoColor=black&labelColor=0a0a0a)](https://www.typescriptlang.org)
@@ -40,22 +41,42 @@ No boilerplate. No config. No servers. Just describe.
 
 ## ✦ Features
 
+### The builder
+
 | | Feature | What it does |
 |---|---|---|
 | ✦ | **Prompt → Product** | One paragraph becomes a complete, working app with real UI, logic and persistence — not a mockup |
-| ⚡ | **Z.AI brain** | Generation, editing and prompt enhancement all run on Z.AI models via a dedicated brain service |
+| ⚡ | **Z.AI brain** | Generation, editing and enhancement all run on Z.AI models via a dedicated brain service |
 | 💬 | **Iterate by conversation** | "Add a dark mode toggle" → the AI re-architects the app in seconds |
-| ✨ | **Prompt Enhancer** | Turn "todo app" into a rich product brief with one click, powered by Z.AI |
-| 🎨 | **Design vibes** | One-tap style presets: Elegant dark · Clean light · Playful color · Ultra minimal |
-| 👀 | **Live sandboxed preview** | Desktop & mobile frames, refresh and open-in-tab while the AI works |
-| 🕰 | **Version history** | Every build is a version — browse the timeline and restore any point |
-| 🚀 | **One-click publish** | Every app gets a public URL and appears in the Explore gallery |
-| 🌍 | **Explore gallery** | Live, scrollable thumbnails of every published app |
-| 🍴 | **Fork & download** | Fork any of your apps or export the HTML — your code, your rules |
-| 🔐 | **Auth & accounts** | JWT auth with bcrypt hashing on a real PostgreSQL database |
-| 📊 | **Real thumbnails** | Dashboard and gallery render actual live previews of your apps |
-| 📱 | **Fully responsive** | Mobile-first across every page — builder included (chat ⇄ preview tabs, scrollable toolbars) |
-| 🖤 | **MONOLITH design** | A flat, hueless true-black canvas, hairline borders, editorial Instrument Serif display type, Geist UI, Geist Mono meta — and zero gradients |
+| ✨ | **Prompt Enhancer** | Turn "todo app" into a rich product brief with one click |
+| 🎨 | **Design vibes + Templates** | Style presets (Elegant dark · Clean light · Playful · Minimal) and six starter blueprints |
+| 👀 | **Live sandboxed preview** | Desktop, tablet **and** mobile frames, refresh and open-in-tab while the AI works |
+| 🕰 | **Version history + restore** | Every build is a version — browse the timeline and roll back to any point |
+| 🔀 | **Version diff** | Claude Code–style line-level diff (+/−) between any two versions |
+| 🧑‍💻 | **Syntax-highlighted code view** | Real source with line numbers, copy, **HTML download** (⌘S) and AI notes |
+| 💡 | **Explain this code** | Z.AI reads the file and teaches you how it works — no changes made |
+| 🤖 | **Ask mode** | Question your app's code, find bugs, get advice — never edits |
+| 📋 | **Plan mode** | `/plan` returns an implementation roadmap before committing to a build |
+| 🩹 | **Quick actions + slash commands** | One-tap Fix errors / Polish UI / Make responsive / Dark mode / SEO — or type `/fix` `/polish` `/dark`… |
+| 🚀 | **One-click publish + unpublish** | Public `/p/{slug}` URL in one click; take it offline whenever |
+| 🍴 | **Fork, duplicate & download** | Clone any of your apps, or export the HTML — your code, your rules |
+| ⌨️ | **Keyboard shortcuts** | ⌘K command palette, ⌘S download, Enter to build |
+
+### The community
+
+| | Feature | What it does |
+|---|---|---|
+| 💬 | **Lovify Chat** | A standalone chat-only AI companion — brainstorm anything, no project needed, history persisted |
+| 🌍 | **Explore gallery** | Live thumbnails, **search**, and sort by Newest / Most loved / Most viewed |
+| ❤️ | **Likes** | Heart any published app — counts are real, stored server-side |
+| 📈 | **View counts** | Every published app tracks its own real traffic |
+| 🔀 | **Remix any app** | Clone any published app into your workspace in one click |
+| 👤 | **Builder profiles** | Every builder gets a public page at `/u/{handle}` with their published apps |
+| 📊 | **Usage dashboard** | Projects, versions, messages, likes received, views received |
+| ⚙️ | **Account settings** | Display name, public handle, liked apps, session management |
+| ⌘ | **Command palette** | ⌘K anywhere on the dashboard: search projects, run actions |
+| 📱 | **Fully responsive** | Mobile-first across every page — builder included (chat ⇄ preview tabs, swipeable toolbars) |
+| 🖤 | **MONOLITH design** | Flat, hueless true-black canvas, hairline borders, editorial Instrument Serif display type, Geist UI, Geist Mono meta — and zero gradients |
 
 ## ⚙️ Tech Stack
 
@@ -65,9 +86,9 @@ No boilerplate. No config. No servers. Just describe.
 | **UI System** | Tailwind CSS 4 + shadcn/ui + Framer Motion | The "MONOLITH" design system — flat true-black surfaces, hairline borders, one champagne-gold accent, ivory primary actions |
 | **Backend** | [FastAPI](https://fastapi.tiangolo.com) + Python 3.12 | Async-ready REST API, background task pipeline for AI builds |
 | **ORM** | SQLAlchemy 2 (typed, 2.0-style) | `TZDateTime`-safe columns, portable across SQLite and PostgreSQL |
-| **Database** | **PostgreSQL** (SQLAlchemy engine) | Production-grade relational store — users, projects, messages, versions. Free cloud hosting via [Neon](https://neon.tech); falls back to local **SQLite** when `DATABASE_URL` is unset |
+| **Database** | **PostgreSQL** (SQLAlchemy engine) | Production-grade relational store — users, projects, messages, versions, likes. Free cloud hosting via [Neon](https://neon.tech); falls back to local **SQLite** when `DATABASE_URL` is unset |
 | **Auth** | JWT (python-jose) + bcrypt (passlib) | 30-day sessions, hashed passwords, Bearer-protected API |
-| **AI Brain** | [Z.AI](https://z.ai) via `z-ai-web-dev-sdk` on Bun | Dedicated micro-service (:8001) for generation, editing and prompt enhancement |
+| **AI Brain** | [Z.AI](https://z.ai) via `z-ai-web-dev-sdk` on Bun | Dedicated micro-service (:8001) for generation, editing, chat, Ask/Plan/Explain modes |
 | **Typography** | Instrument Serif · Geist · Geist Mono | Editorial display voice + precise UI face + technical meta labels |
 | **Styling engine** | Tailwind CSS 4 (OKLCH color tokens) | Flat tokenized palette, hairline borders, film-grain texture — no gradients anywhere |
 
@@ -76,12 +97,14 @@ No boilerplate. No config. No servers. Just describe.
 ```text
 ┌─────────────────────────────────────────────────────────────────────┐
 │                           BROWSER (you)                             │
-│   landing · auth · dashboard · builder · explore · /p/{slug}        │
+│  landing · auth · dashboard · builder · /chat · explore ·           │
+│  /p/{slug} · /u/{handle} · /settings                                │
 └──────────────────────────────┬──────────────────────────────────────┘
                                │ relative fetches via gateway
 ┌──────────────────────────────▼──────────────────────────────────────┐
 │                      GATEWAY  (single port)                         │
 │      /api/*?XTransformPort=8000  ──────────►  FastAPI :8000         │
+│      /chat?XTransformPort=8001   ──────────►  Z.AI brain :8001      │
 │      everything else            ──────────►  Next.js :3000          │
 └───────────────┬─────────────────────────────────────┬───────────────┘
                 │                                     │
@@ -89,19 +112,21 @@ No boilerplate. No config. No servers. Just describe.
 │      FASTAPI  main backend     │    │   NEXT.JS 16  frontend       │
 │  · JWT auth (bcrypt)           │    │  · landing / auth pages      │
 │  · projects · messages         │    │  · dashboard · builder UI    │
-│  · versions · publish/explore  │    │  · service keeper (boots     │
-│  · generation pipeline         │    │    the two services below)   │
-│  · prompt enhancer · fork      │    └───────────────────────────────┘
-└────────┬──────────────┬────────┘
+│  · versions · publish/explore  │    │  · Lovify Chat /chat         │
+│  · generation pipeline         │    │  · profiles · settings       │
+│  · likes · views · remix       │    │  · ⌘K command palette        │
+│  · Ask / Plan assistant modes  │    │  · service keeper (boots     │
+│  · profiles · usage stats      │    │    the two services below)   │
+└────────┬──────────────┬────────┘    └───────────────────────────────┘
          │              │
 ┌────────▼───────┐  ┌───▼──────────────────────────┐
 │  POSTGRESQL    │  │   Z.AI BRAIN SERVICE :8001   │
 │  (Neon cloud   │  │   z-ai-web-dev-sdk wrapper   │
 │   or SQLite)   │  │  · /generate  create | edit  │
-│  users         │  │  · /chat      enhancer etc.  │
+│  users+handles │  │  · /chat      assistant etc. │
 │  projects      │  │  truncation auto-recovery    │
 │  messages      │  └──────────────────────────────┘
-│  versions      │
+│  versions·likes│
 └────────────────┘
 ```
 
@@ -109,19 +134,22 @@ No boilerplate. No config. No servers. Just describe.
 
 ```text
 ├── src/app/                 # Next.js 16 App Router (frontend)
-│   ├── page.tsx             #   landing
+│   ├── page.tsx             #   landing (30-feature wall)
 │   ├── auth/                #   sign in / sign up
-│   ├── dashboard/           #   your apps (+ live thumbnails)
-│   ├── builder/[id]/        #   chat + preview + versions + publish
-│   ├── explore/             #   public gallery
-│   ├── p/[slug]/            #   published app viewer
+│   ├── dashboard/           #   your apps (+ ⌘K palette, templates)
+│   ├── builder/[id]/        #   chat (Build/Ask) + preview + code + diff + publish
+│   ├── chat/                #   standalone Lovify Chat (chat-only AI)
+│   ├── explore/             #   public gallery (search + sort + likes)
+│   ├── p/[slug]/            #   published app viewer (like · remix · views)
+│   ├── u/[handle]/          #   public builder profiles
+│   ├── settings/            #   account, usage stats, liked apps
 │   └── api/boot-services/   #   keeps both services alive
 ├── mini-services/
 │   ├── api/                 # FastAPI backend (port 8000)
-│   │   ├── index.py         #   app entry + health
+│   │   ├── index.py         #   app entry + schema migration + health
 │   │   ├── models.py        #   SQLAlchemy models (SQLite + PostgreSQL safe)
 │   │   ├── generation.py    #   AI pipeline (background tasks)
-│   │   └── routers/         #   auth · projects · public · power
+│   │   └── routers/         #   auth · projects · public · power · social · assistant
 │   └── ai-service/          # Z.AI brain (port 8001, Bun)
 │       └── index.ts         #   /generate · /chat
 └── docs/screenshots/        # the images you see above
@@ -160,19 +188,31 @@ Tables are created automatically on first boot — on **PostgreSQL** or SQLite, 
 | `POST` | `/api/auth/signup` | — | Create account → `{token, user}` |
 | `POST` | `/api/auth/login` | — | Sign in → `{token, user}` |
 | `GET` | `/api/auth/me` | Bearer | Current user |
+| `PATCH` | `/api/me` | Bearer | Update display name (+ issue public handle) |
+| `GET` | `/api/me/usage` | Bearer | Personal usage stats (projects, versions, likes…) |
+| `GET` | `/api/me/likes` | Bearer | Apps you liked |
 | `GET` | `/api/projects` | Bearer | List your apps (`?with_html=1` for thumbnails) |
 | `POST` | `/api/projects` | Bearer | Create app from a prompt → AI builds it |
 | `GET` | `/api/projects/{id}` | Bearer | Full detail: html + messages + versions |
 | `PATCH` | `/api/projects/{id}` | Bearer | Rename |
 | `DELETE` | `/api/projects/{id}` | Bearer | Delete app + versions + messages |
-| `POST` | `/api/projects/{id}/chat` | Bearer | Iterate: send a change request |
+| `POST` | `/api/projects/{id}/chat` | Bearer | Build mode: send a change request |
+| `POST` | `/api/projects/{id}/ask` | Bearer | Ask mode: question the app, no edits |
+| `POST` | `/api/projects/{id}/plan` | Bearer | Plan mode: implementation roadmap |
 | `POST` | `/api/projects/{id}/restore` | Bearer | Roll back to version N |
-| `POST` | `/api/projects/{id}/fork` | Bearer | Clone the app |
+| `POST` | `/api/projects/{id}/fork` | Bearer | Clone your own app |
+| `POST` | `/api/projects/{id}/duplicate` | Bearer | Branch a copy |
 | `POST` | `/api/projects/{id}/publish` | Bearer | Publish → public `/p/{slug}` URL |
+| `POST` | `/api/projects/{id}/unpublish` | Bearer | Take a live app offline |
 | `GET` | `/api/projects/{id}/code` | Bearer | Raw HTML |
+| `GET` | `/api/projects/{id}/versions/{n}` | Bearer | Stored HTML of one version (diffs) |
 | `POST` | `/api/enhance-prompt` | Bearer | Z.AI prompt enhancement |
-| `GET` | `/api/explore` | — | Public gallery (`?with_html=1`) |
-| `GET` | `/api/published/{slug}` | — | Published app HTML |
+| `POST` | `/api/assistant/chat` | Bearer | Chat-only Lovify Chat mode |
+| `GET` | `/api/explore` | — | Gallery — `?q=&sort=newest\|liked\|viewed&with_html=1` |
+| `GET` | `/api/published/{slug}` | — | Published app HTML (increments views) |
+| `POST` | `/api/published/{slug}/like` | Bearer | Toggle like → `{liked, likes}` |
+| `POST` | `/api/published/{slug}/remix` | Bearer | Clone any published app into your workspace |
+| `GET` | `/api/u/{handle}` | — | Public builder profile + apps |
 | `GET` | `/api/stats` | — | Platform counters |
 | `GET` | `/api/health` | — | Service + database health |
 
@@ -209,6 +249,10 @@ Tables are created automatically on first boot — on **PostgreSQL** or SQLite, 
 - [x] Prompt enhancer + design vibes
 - [x] Fork + HTML export
 - [x] Premium "MONOLITH" responsive redesign — flat true black, editorial serif type, zero gradients
+- [x] Chat-only AI (Lovify Chat), Ask mode, Plan mode
+- [x] Version diffs, syntax-highlighted code view, HTML download
+- [x] Likes, view counts, remix, builder profiles
+- [x] ⌘K command palette, templates, usage dashboard
 - [ ] Streaming builds (token-level progress)
 - [ ] Multi-file project export
 - [ ] GitHub sync for generated apps

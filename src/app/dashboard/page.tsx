@@ -7,13 +7,16 @@ import {
   Compass,
   Loader2,
   LogOut,
+  MessagesSquare,
   Plus,
   Rocket,
+  Settings,
   Sparkles,
 } from "lucide-react";
 
 import Link from "next/link";
 import { BrandLogo } from "@/components/brand-logo";
+import { CommandPalette } from "@/components/dashboard/command-palette";
 import { CreateProjectDialog } from "@/components/dashboard/create-project-dialog";
 import { ProjectCard } from "@/components/dashboard/project-card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -43,6 +46,19 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
+  const [paletteOpen, setPaletteOpen] = useState(false);
+
+  /* Global Cmd/Ctrl+K toggles the command palette. */
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setPaletteOpen((v) => !v);
+      }
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
 
   /* Auth guard */
   useEffect(() => {
@@ -109,6 +125,27 @@ export default function DashboardPage() {
             asChild
             variant="ghost"
             size="icon"
+            aria-label="Lovify Chat"
+            className="text-muted-foreground sm:hidden"
+          >
+            <Link href="/chat">
+              <MessagesSquare className="size-4" />
+            </Link>
+          </Button>
+          <Button
+            asChild
+            variant="ghost"
+            className="hidden text-muted-foreground sm:inline-flex"
+          >
+            <Link href="/chat">
+              <MessagesSquare className="size-4" />
+              Chat
+            </Link>
+          </Button>
+          <Button
+            asChild
+            variant="ghost"
+            size="icon"
             aria-label="Explore gallery"
             className="text-muted-foreground sm:hidden"
           >
@@ -125,6 +162,15 @@ export default function DashboardPage() {
               <Compass className="size-4" />
               Explore
             </Link>
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPaletteOpen(true)}
+            aria-label="Open command palette"
+            className="hidden gap-2 lg:inline-flex"
+          >
+            <kbd className="font-mono text-[10px] text-muted-foreground">⌘K</kbd>
           </Button>
           <Button onClick={() => setCreateOpen(true)}>
             <Plus className="size-4" />
@@ -153,6 +199,10 @@ export default function DashboardPage() {
                 </span>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => router.push("/settings")}>
+                <Settings />
+                Settings
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={handleSignOut}>
                 <LogOut />
                 Sign out
@@ -247,13 +297,26 @@ export default function DashboardPage() {
         ) : (
           <div className="mt-6 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
             {projects.map((p) => (
-              <ProjectCard key={p.id} project={p} onDeleted={handleDeleted} onRenamed={handleRenamed} />
+              <ProjectCard
+                key={p.id}
+                project={p}
+                onDeleted={handleDeleted}
+                onRenamed={handleRenamed}
+                onDuplicated={() => void load()}
+                onUnpublished={() => void load()}
+              />
             ))}
           </div>
         )}
       </main>
 
       <CreateProjectDialog open={createOpen} onOpenChange={setCreateOpen} />
+      <CommandPalette
+        open={paletteOpen}
+        onOpenChange={setPaletteOpen}
+        projects={projects.map((p) => ({ id: p.id, name: p.name, status: p.status }))}
+        onNewProject={() => setCreateOpen(true)}
+      />
     </div>
   );
 }

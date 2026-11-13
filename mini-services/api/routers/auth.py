@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from database import get_db
 from deps import get_current_user
 from models import User
+from routers.social import ensure_handle
 from schemas import AuthOut, LoginIn, SignupIn, UserOut
 from security import create_access_token, hash_password, verify_password
 
@@ -33,6 +34,8 @@ def signup(body: SignupIn, db: Session = Depends(get_db)):
         password_hash=hash_password(body.password),
     )
     db.add(user)
+    db.flush()
+    ensure_handle(db, user)
     db.commit()
     db.refresh(user)
 
@@ -45,6 +48,7 @@ def login(body: LoginIn, db: Session = Depends(get_db)):
     if not user or not verify_password(body.password, user.password_hash):
         raise HTTPException(status_code=401, detail="Invalid email or password")
 
+    ensure_handle(db, user)
     return AuthOut(token=create_access_token(user.id), user=_user_out(user))
 
 

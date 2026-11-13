@@ -45,7 +45,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { ApiError, deleteProject, forkProject, renameProject } from "@/lib/api";
+import { ApiError, deleteProject, duplicateProject, forkProject, renameProject, unpublishProject } from "@/lib/api";
 import type { ProjectStatus, ProjectSummary } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -80,10 +80,14 @@ export function ProjectCard({
   project,
   onDeleted,
   onRenamed,
+  onDuplicated,
+  onUnpublished,
 }: {
   project: ProjectCardData;
   onDeleted: (id: string) => void;
   onRenamed: (id: string, name: string) => void;
+  onDuplicated?: (p: { id: string; name: string }) => void;
+  onUnpublished?: (id: string) => void;
 }) {
   const router = useRouter();
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -92,6 +96,9 @@ export function ProjectCard({
   const [renameValue, setRenameValue] = useState(project.name);
   const [renaming, setRenaming] = useState(false);
   const [forking, setForking] = useState(false);
+  const [duplicating, setDuplicating] = useState(false);
+  const [unpublishOpen, setUnpublishOpen] = useState(false);
+  const [unpublishing, setUnpublishing] = useState(false);
 
   const updatedAt = project.updated_at ? new Date(project.updated_at) : null;
   const updatedLabel =
@@ -141,6 +148,39 @@ export function ProjectCard({
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : "Fork failed");
       setForking(false);
+    }
+  }
+
+  async function handleDuplicate() {
+    if (duplicating) return;
+    setDuplicating(true);
+    try {
+      const res = await duplicateProject(project.id);
+      toast.success(`Duplicated as “${res.name}”`);
+      onDuplicated?.(res);
+    } catch (err) {
+      toast.error(
+        err instanceof ApiError ? err.message : "Duplicate failed. Please try again."
+      );
+    } finally {
+      setDuplicating(false);
+    }
+  }
+
+  async function handleUnpublish() {
+    if (unpublishing) return;
+    setUnpublishing(true);
+    try {
+      await unpublishProject(project.id);
+      toast.success("App is offline");
+      onUnpublished?.(project.id);
+      setUnpublishOpen(false);
+    } catch (err) {
+      toast.error(
+        err instanceof ApiError ? err.message : "Unpublish failed. Please try again."
+      );
+    } finally {
+      setUnpublishing(false);
     }
   }
 
@@ -261,6 +301,10 @@ export function ProjectCard({
                   {forking ? <Loader2 className="animate-spin" /> : <GitFork />}
                   Fork
                 </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => void handleDuplicate()} disabled={duplicating}>
+                  {duplicating ? <Loader2 className="animate-spin" /> : <Copy />}
+                  Duplicate
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleDownload} disabled={!project.html}>
                   <Download />
                   Download HTML
@@ -269,6 +313,15 @@ export function ProjectCard({
                   <DropdownMenuItem onClick={copyPublishLink}>
                     <Copy />
                     Copy publish link
+                  </DropdownMenuItem>
+                ) : null}
+                {project.published_slug ? (
+                  <DropdownMenuItem
+                    onClick={() => setUnpublishOpen(true)}
+                    disabled={unpublishing}
+                  >
+                    <Globe />
+                    Unpublish
                   </DropdownMenuItem>
                 ) : null}
                 <DropdownMenuSeparator />
@@ -353,6 +406,36 @@ export function ProjectCard({
                 <Trash2 className="size-4" />
               )}
               Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Unpublish confirmation */}
+      <AlertDialog open={unpublishOpen} onOpenChange={setUnpublishOpen}>
+        <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Take “{project.name}” offline?</AlertDialogTitle>
+            <AlertDialogDescription>
+              The public link to this app stops working immediately. You can
+              publish it again at any time from the builder.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={unpublishing}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={unpublishing}
+              onClick={(e) => {
+                e.preventDefault();
+                void handleUnpublish();
+              }}
+            >
+              {unpublishing ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <Globe className="size-4" />
+              )}
+              Unpublish
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

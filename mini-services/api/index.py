@@ -15,12 +15,29 @@ from sqlalchemy import text
 from database import Base, SessionLocal, engine
 from generation import fail_stale_generations
 from models import Project, ProjectVersion, User  # noqa: F401 — register models
-from routers import auth, power, projects, public
+from routers import assistant, auth, power, projects, public, social
+
+
+def ensure_schema():
+    """Lightweight migrations that Base.metadata.create_all can't apply:
+    new columns on pre-existing tables (safe to run on every boot)."""
+    statements = [
+        'ALTER TABLE projects ADD COLUMN views INTEGER DEFAULT 0',
+        'ALTER TABLE users ADD COLUMN handle VARCHAR(64)',
+    ]
+    with SessionLocal() as db:
+        for stmt in statements:
+            try:
+                db.execute(text(stmt))
+            except Exception:  # noqa: BLE001 — column already exists
+                pass
+        db.commit()
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     Base.metadata.create_all(bind=engine)
+    ensure_schema()
     fail_stale_generations()
     yield
 
@@ -44,6 +61,8 @@ app.include_router(auth.router)
 app.include_router(projects.router)
 app.include_router(public.router)
 app.include_router(power.router)
+app.include_router(social.router)
+app.include_router(assistant.router)
 
 
 @app.get("/api/health")

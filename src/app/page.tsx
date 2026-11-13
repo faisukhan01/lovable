@@ -16,13 +16,27 @@ import {
 } from "framer-motion";
 import {
   ArrowRight,
+  Bandage,
   BrainCircuit,
   ChartNoAxesColumn,
+  Code2,
+  Command,
+  Copy,
   ExternalLink,
+  Eye,
   Gamepad2,
+  GitCompareArrows,
+  GitFork,
   Github,
+  Globe,
+  Heart,
+  HelpCircle,
   History,
+  Keyboard,
   LayoutGrid,
+  LayoutTemplate,
+  Lightbulb,
+  ListChecks,
   ListTodo,
   Loader2,
   Lock,
@@ -33,6 +47,7 @@ import {
   PenLine,
   Rocket,
   Search,
+  Settings,
   ShieldCheck,
   ShoppingBag,
   Sparkles,
@@ -111,6 +126,125 @@ const STEPS: { icon: LucideIcon; title: string; text: string }[] = [
     icon: Rocket,
     title: "Refine & publish",
     text: "Chat your tweaks, pick a version, hit publish — share the link with the world.",
+  },
+];
+
+/* The full inventory — 24 more capabilities beyond the flagship six. */
+const MORE_FEATURES: { icon: LucideIcon; title: string; text: string }[] = [
+  {
+    icon: MessagesSquare,
+    title: "Lovify Chat",
+    text: "A standalone AI companion for brainstorming — no project needed.",
+  },
+  {
+    icon: HelpCircle,
+    title: "Ask mode",
+    text: "Question your app's code without changing a single line.",
+  },
+  {
+    icon: ListChecks,
+    title: "Plan mode",
+    text: "Get an implementation roadmap before committing to a build.",
+  },
+  {
+    icon: Wand2,
+    title: "Prompt enhancer",
+    text: "One tap rewrites rough ideas into rich, specific briefs.",
+  },
+  {
+    icon: Bandage,
+    title: "One-tap fixes",
+    text: "Quick actions for bugs, responsiveness, dark mode and SEO.",
+  },
+  {
+    icon: GitCompareArrows,
+    title: "Version diff",
+    text: "Line-by-line diff between any two versions of your app.",
+  },
+  {
+    icon: Code2,
+    title: "Real code view",
+    text: "Syntax-highlighted source with copy, download and AI notes.",
+  },
+  {
+    icon: Lightbulb,
+    title: "Explain this code",
+    text: "Z.AI reads the file and teaches you how it works.",
+  },
+  {
+    icon: MonitorSmartphone,
+    title: "3 device previews",
+    text: "Desktop, tablet and mobile frames, instantly switchable.",
+  },
+  {
+    icon: History,
+    title: "Restore anytime",
+    text: "Roll back to any version with one click — nothing is lost.",
+  },
+  {
+    icon: Keyboard,
+    title: "Keyboard shortcuts",
+    text: "⌘K command palette, ⌘S download, Enter to build.",
+  },
+  {
+    icon: Command,
+    title: "Command palette",
+    text: "Search projects and run actions from anywhere.",
+  },
+  {
+    icon: LayoutTemplate,
+    title: "Templates",
+    text: "Start from six battle-tested app blueprints.",
+  },
+  {
+    icon: GitFork,
+    title: "Remix any app",
+    text: "Clone any published app into your workspace instantly.",
+  },
+  {
+    icon: Heart,
+    title: "Likes",
+    text: "Love the apps you explore — and earn hearts on your own.",
+  },
+  {
+    icon: Eye,
+    title: "View counts",
+    text: "Watch real traffic land on every published app.",
+  },
+  {
+    icon: Search,
+    title: "Explore search",
+    text: "Filter the live gallery by name, idea or builder.",
+  },
+  {
+    icon: UserRound,
+    title: "Builder profiles",
+    text: "Every builder gets a public page with their published apps.",
+  },
+  {
+    icon: Copy,
+    title: "Duplicate projects",
+    text: "Branch an app into a copy without touching the original.",
+  },
+  {
+    icon: Globe,
+    title: "Unpublish",
+    text: "Take any live app offline whenever you want.",
+  },
+  {
+    icon: ChartNoAxesColumn,
+    title: "Usage dashboard",
+    text: "Track projects, versions, messages, likes and views.",
+  },
+  {
+    icon: Settings,
+    title: "Account settings",
+    text: "Rename your profile, review usage, manage your session.",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Sandboxed previews",
+    text: "Generated apps run in a locked-down sandbox, always.",
   },
 ];
 
@@ -740,6 +874,9 @@ export default function Home() {
             <a href="#how-it-works" onClick={scrollToSection("how-it-works")} className="nav-link transition-colors hover:text-foreground">
               How it works
             </a>
+            <Link href="/chat" className="nav-link transition-colors hover:text-foreground">
+              Chat
+            </Link>
             <Link href="/explore" className="nav-link transition-colors hover:text-foreground">
               Explore
             </Link>
@@ -807,6 +944,13 @@ export default function Home() {
                 >
                   How it works
                 </a>
+                <Link
+                  href="/chat"
+                  onClick={closeMenu}
+                  className="block rounded-lg px-3 py-2.5 font-mono text-[11px] uppercase tracking-[0.18em] text-zinc-400 transition hover:bg-white/[0.04] hover:text-foreground"
+                >
+                  Chat
+                </Link>
                 <Link
                   href="/explore"
                   onClick={closeMenu}
@@ -1019,6 +1163,54 @@ export default function Home() {
           </div>
         </section>
 
+        {/* --------------------------- feature wall --------------------------- */}
+        <section id="everything" className="scroll-mt-20 pb-24 sm:pb-28">
+          <div className="mx-auto max-w-6xl px-5 sm:px-6">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-80px" }}
+              transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+              className="text-center"
+            >
+              <p className="eyebrow">And that is not all</p>
+              <h2 className="mt-4 font-display text-4xl tracking-normal sm:text-5xl">
+                Thirty features. One prompt away.
+              </h2>
+              <p className="mx-auto mt-4 max-w-xl text-muted-foreground">
+                Everything below is already inside Lovify — chat-only AI, coding tools,
+                community, and platform power taken from the best of Lovable, Base44 and Claude Code.
+              </p>
+            </motion.div>
+            <motion.div
+              variants={staggerContainer}
+              initial="hidden"
+              whileInView="show"
+              viewport={{ once: true, margin: "-60px" }}
+              className="mt-12 grid gap-3 sm:grid-cols-2 lg:grid-cols-4"
+            >
+              {MORE_FEATURES.map((f) => (
+                <motion.div
+                  key={f.title}
+                  variants={staggerItem}
+                  whileHover={{ y: -3 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 24 }}
+                  className="luxe-card group rounded-xl p-4"
+                >
+                  <div className="flex items-center gap-2">
+                    <f.icon
+                      className="size-4 text-gold transition-transform duration-300 group-hover:scale-110"
+                      aria-hidden="true"
+                    />
+                    <h3 className="text-sm font-medium">{f.title}</h3>
+                  </div>
+                  <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">{f.text}</p>
+                </motion.div>
+              ))}
+            </motion.div>
+          </div>
+        </section>
+
         {/* --------------------------- how it works --------------------------- */}
         <section id="how-it-works" className="scroll-mt-20 py-24 sm:py-28">
           <div className="mx-auto max-w-5xl px-5 sm:px-6">
@@ -1198,6 +1390,9 @@ export default function Home() {
             <a href="#how-it-works" onClick={scrollToSection("how-it-works")} className="nav-link transition-colors hover:text-foreground">
               How it works
             </a>
+            <Link href="/chat" className="nav-link transition-colors hover:text-foreground">
+              Chat
+            </Link>
             <Link href="/explore" className="nav-link transition-colors hover:text-foreground">
               Explore
             </Link>

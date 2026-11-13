@@ -59,4 +59,55 @@ export interface PublishedApp {
   description: string;
   html: string;
   published_at: string | null;
+  views?: number;
+  likes?: number;
+  author?: string;
+  author_name?: string | null;
+}
+
+/* --------------------------- social / community --------------------------- */
+
+export interface ExploreApp {
+  slug: string;
+  name: string;
+  description: string;
+  version: number;
+  views: number;
+  likes: number;
+  author: string;
+  published_at: string | null;
+  liked?: boolean;
+  html?: string | null;
+}
+
+export type ExploreSort = "newest" | "liked" | "viewed";
+
+export interface BuilderProfile {
+  handle: string;
+  name: string;
+  joined: string | null;
+  apps_published: number;
+  total_views: number;
+  apps: {
+    slug: string;
+    name: string;
+    description: string;
+    views: number;
+    likes: number;
+    published_at: string | null;
+  }[];
+}
+
+export interface UsageStats {
+  projects: number;
+  published: number;
+  versions: number;
+  messages: number;
+  likes_received: number;
+  views_received: number;
+}
+
+export interface ChatMessage {
+  role: "user" | "assistant";
+  content: string;
 }

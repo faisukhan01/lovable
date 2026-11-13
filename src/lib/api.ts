@@ -11,10 +11,15 @@
 import { useAuthStore } from "@/lib/store";
 import type {
   AuthResponse,
+  ChatMessage,
+  ExploreApp,
+  ExploreSort,
+  BuilderProfile,
   ProjectDetail,
   ProjectSummary,
   PublishedApp,
   Stats,
+  UsageStats,
   UserT,
 } from "@/lib/types";
 
@@ -140,6 +145,47 @@ export function getProjectCode(id: string) {
   return request<{ html: string; version: number }>(`/projects/${id}/code`);
 }
 
+export function getVersionHtml(id: string, version: number) {
+  return request<{ version: number; label: string; html: string; created_at: string | null }>(
+    `/projects/${id}/versions/${version}`
+  );
+}
+
+/**
+ * Explain-this-code — talks straight to the Z.AI brain (port 8001) so the
+ * answer is NOT stored in the project conversation.
+ */
+export async function explainCode(html: string, appName: string): Promise<string> {
+  const token = useAuthStore.getState().token;
+  let res: Response;
+  try {
+    res = await fetch("/chat?XTransformPort=8001", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({
+        system:
+          "You are Lovify's code explainer, powered by Z.AI. You receive a complete single-file HTML app. Explain: (1) what the app does, (2) its main sections/screens, (3) how state and data persistence work, (4) 2-3 notable implementation details worth learning from. Keep it under 220 words, friendly and concrete. Use markdown-lite: **bold** labels, '- ' bullets. Never output code.",
+        prompt: `App name: "${appName}". Here is the full code:\n\n${html.slice(0, 120000)}`,
+      }),
+    });
+  } catch {
+    throw new ApiError(0, "Cannot reach the Z.AI brain right now.");
+  }
+  let data: { ok?: boolean; raw?: string; error?: string } = {};
+  try {
+    data = await res.json();
+  } catch {
+    /* ignore */
+  }
+  if (!res.ok || !data.ok || !data.raw) {
+    throw new ApiError(res.status, data.error || "The explainer is busy. Try again in a moment.");
+  }
+  return data.raw;
+}
+
 /* ------------------------- Power features ------------------------ */
 
 export function enhancePrompt(prompt: string) {
@@ -184,4 +230,91 @@ export function getStats() {
 
 export function getPublishedApp(slug: string) {
   return request<PublishedApp>(`/published/${slug}`);
+}
+
+/* ---------------------- Community & social ---------------------- */
+
+export function exploreAppsFiltered(opts: {
+  q?: string;
+  sort?: ExploreSort;
+  limit?: number;
+  withHtml?: boolean;
+} = {}) {
+  const params = new URLSearchParams();
+  if (opts.q) params.set("q", opts.q);
+  if (opts.sort) params.set("sort", opts.sort);
+  if (opts.limit) params.set("limit", String(opts.limit));
+  if (opts.withHtml) params.set("with_html", "1");
+  const qs = params.toString();
+  return request<{ apps: ExploreApp[] }>(`/explore${qs ? `?${qs}` : ""}`);
+}
+
+export function toggleLike(slug: string) {
+  return request<{ liked: boolean; likes: number }>(`/published/${slug}/like`, {
+    method: "POST",
+    body: {},
+  });
+}
+
+export function remixApp(slug: string) {
+  return request<{ id: string; name: string; status: string }>(
+    `/published/${slug}/remix`,
+    { method: "POST", body: {} }
+  );
+}
+
+export function getBuilderProfile(handle: string) {
+  return request<BuilderProfile>(`/u/${encodeURIComponent(handle)}`);
+}
+
+export function getMyLikes() {
+  return request<{ apps: ExploreApp[] }>("/me/likes");
+}
+
+export function getMyUsage() {
+  return request<UsageStats>("/me/usage");
+}
+
+export function updateMe(name: string) {
+  return request<{ ok: boolean; user: UserT }>("/me", {
+    method: "PATCH",
+    body: { name },
+  });
+}
+
+export function duplicateProject(id: string) {
+  return request<{ id: string; name: string; status: string; version: number }>(
+    `/projects/${id}/duplicate`,
+    { method: "POST", body: {} }
+  );
+}
+
+export function unpublishProject(id: string) {
+  return request<{ ok: boolean }>(`/projects/${id}/unpublish`, {
+    method: "POST",
+    body: {},
+  });
+}
+
+/* ------------------------ AI assistant modes --------------------- */
+
+export function assistantChat(messages: ChatMessage[]) {
+  return request<{ reply: string }>("/assistant/chat", {
+    method: "POST",
+    body: { messages },
+  });
+}
+
+export function askAboutProject(id: string, message: string) {
+  return request<{ reply: string; mode: string }>(`/projects/${id}/ask`, {
+    method: "POST",
+    body: { message },
+  });
+}
+
+export function planForProject(id: string, message: string) {
+  return request<{ reply: string; mode: string }>(`/projects/${id}/plan`, {
+    method: "POST",
+    body: { message },
+  });
 }

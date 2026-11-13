@@ -53,6 +53,8 @@ class User(Base):
     id = Column(String(32), primary_key=True, default=_uid)
     email = Column(String(255), unique=True, nullable=False, index=True)
     name = Column(String(120), nullable=True)
+    # public profile handle (e.g. "faisal") — /u/<handle>
+    handle = Column(String(64), unique=True, nullable=True, index=True)
     password_hash = Column(String(255), nullable=False)
     created_at = Column(TZDateTime(), default=_now, nullable=False)
 
@@ -72,6 +74,8 @@ class Project(Base):
     version = Column(Integer, default=0, nullable=False)
     published_slug = Column(String(120), unique=True, nullable=True, index=True)
     published_at = Column(TZDateTime(), nullable=True)
+    # simple social proof counters
+    views = Column(Integer, default=0, nullable=False)
     created_at = Column(TZDateTime(), default=_now, nullable=False)
     updated_at = Column(TZDateTime(), default=_now, nullable=False)
 
@@ -84,6 +88,16 @@ class Message(Base):
     # user | assistant
     role = Column(String(20), nullable=False)
     content = Column(Text, nullable=False)
+    created_at = Column(TZDateTime(), default=_now, nullable=False)
+
+
+class Like(Base):
+    __tablename__ = "likes"
+    __table_args__ = (UniqueConstraint("user_id", "project_id"),)
+
+    id = Column(String(32), primary_key=True, default=_uid)
+    user_id = Column(String(32), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    project_id = Column(String(32), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False, index=True)
     created_at = Column(TZDateTime(), default=_now, nullable=False)
 
 

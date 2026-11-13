@@ -9,21 +9,25 @@ import {
   Copy,
   Download,
   FileQuestion,
+  GitCompareArrows,
   Globe,
   History,
+  Lightbulb,
   Loader2,
   Monitor,
   PanelTop,
   Pencil,
   Rocket,
   Smartphone,
+  Tablet,
 } from "lucide-react";
 import { format, isValid } from "date-fns";
 import { toast } from "sonner";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 
 import { BrandLogo } from "@/components/brand-logo";
-import { ChatPanel } from "@/components/builder/chat-panel";
+import { ChatPanel, displayContent, expandSlash, type ChatMode } from "@/components/builder/chat-panel";
+import { DiffView } from "@/components/builder/diff-view";
 import {
   PreviewPanel,
   type BuilderTab,
@@ -49,9 +53,20 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   ApiError,
+  askAboutProject,
   chatOnProject,
+  explainCode,
   getProject,
+  getVersionHtml,
+  planForProject,
   publishProject,
   renameProject,
   restoreVersion,
@@ -117,6 +132,18 @@ export default function BuilderPage({
   const [device, setDevice] = useState<DeviceMode>("desktop");
   const [mobileTab, setMobileTab] = useState<"chat" | "preview">("chat");
   const [previewKey, setPreviewKey] = useState(0);
+
+  /* Ask / Plan / Explain / Diff state */
+  const [mode, setMode] = useState<ChatMode>("build");
+  const [thinking, setThinking] = useState(false); // ask/plan in flight
+  const [explainOpen, setExplainOpen] = useState(false);
+  const [explainLoading, setExplainLoading] = useState(false);
+  const [explainText, setExplainText] = useState("");
+  const [diffFrom, setDiffFrom] = useState<number | null>(null);
+  const [diffTo, setDiffTo] = useState<number | null>(null);
+  const [diffBefore, setDiffBefore] = useState("");
+  const [diffAfter, setDiffAfter] = useState("");
+  const [diffLoading, setDiffLoading] = useState(false);
 
   const isDesktop = useMinWidth(1024);
   const generating = project?.status === "generating";
@@ -189,17 +216,119 @@ export default function BuilderPage({
     return `${origin}${publishUrl}`;
   }, [publishUrl]);
 
+  /* Shared version picker for the Diff tab */
+  const diffSelector = (
+    <div className="flex flex-wrap items-center gap-2 border-b border-white/[0.06] px-4 py-2.5">
+      <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+        Compare
+      </span>
+      <Select
+        value={diffFrom != null ? String(diffFrom) : ""}
+        onValueChange={(v) => setDiffFrom(Number(v))}
+      >
+        <SelectTrigger className="h-8 w-[190px] rounded-lg border-white/10 bg-white/[0.03] text-xs" aria-label="Base version">
+          <SelectValue placeholder="base version" />
+        </SelectTrigger>
+        <SelectContent>
+          {(project?.versions ?? []).map((v) => (
+            <SelectItem key={v.id} value={String(v.version)} className="text-xs">
+              v{v.version} · {displayContent(v.label).slice(0, 34) || "build"}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <span aria-hidden className="text-xs text-muted-foreground">→</span>
+      <Select
+        value={diffTo != null ? String(diffTo) : ""}
+        onValueChange={(v) => setDiffTo(Number(v))}
+      >
+        <SelectTrigger className="h-8 w-[190px] rounded-lg border-white/10 bg-white/[0.03] text-xs" aria-label="Compare version">
+          <SelectValue placeholder="compare version" />
+        </SelectTrigger>
+        <SelectContent>
+          {(project?.versions ?? []).map((v) => (
+            <SelectItem key={v.id} value={String(v.version)} className="text-xs">
+              v{v.version} · {displayContent(v.label).slice(0, 34) || "build"}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      {(project?.versions.length ?? 0) < 2 ? (
+        <span className="text-[11px] text-muted-foreground">
+          Build one more version to compare
+        </span>
+      ) : null}
+    </div>
+  );
+
   /* -------------------------------- Handlers -------------------------------- */
   const handleSend = useCallback(
-    async (text: string): Promise<boolean> => {
-      if (!project || sending || project.status === "generating") return false;
-      const prev = project;
+    async (raw: string): Promise<boolean> => {
+      if (!project || sending || thinking) return false;
+      const parsed = expandSlash(raw);
+      const text = parsed.text.trim();
+      if (!text) return false;
+
       const optimisticMsg: MessageT = {
         id: `tmp-${Date.now()}`,
         role: "user",
         content: text,
         created_at: new Date().toISOString(),
       };
+      const prev = project;
+
+      /* ---- Ask mode: read-only answers, never edits ---- */
+      if (mode === "ask" || parsed.ask) {
+        setOptimistic((o) => [...o, optimisticMsg]);
+        setThinking(true);
+        try {
+          await askAboutProject(id, text);
+          const fresh = await getProject(id);
+          setProject(fresh);
+          setOptimistic([]);
+          return true;
+        } catch (err) {
+          setOptimistic((o) => o.filter((m) => m.id !== optimisticMsg.id));
+          toast.error(
+            err instanceof ApiError
+              ? err.message
+              : "Could not get an answer. Please try again."
+          );
+          return false;
+        } finally {
+          setThinking(false);
+        }
+      }
+
+      /* ---- Plan mode: roadmap without touching code (/plan) ---- */
+      if (parsed.plan) {
+        if (project.status === "generating") {
+          toast.error("Wait for the current build to finish, then plan.");
+          return false;
+        }
+        setOptimistic((o) => [...o, optimisticMsg]);
+        setThinking(true);
+        try {
+          await planForProject(id, text);
+          const fresh = await getProject(id);
+          setProject(fresh);
+          setOptimistic([]);
+          return true;
+        } catch (err) {
+          setOptimistic((o) => o.filter((m) => m.id !== optimisticMsg.id));
+          toast.error(
+            err instanceof ApiError
+              ? err.message
+              : "Could not draft a plan. Please try again."
+          );
+          return false;
+        } finally {
+          setThinking(false);
+        }
+      }
+
+      /* ---- Build mode: rebuild the app ---- */
+      if (project.status === "generating") return false;
       setOptimistic((o) => [...o, optimisticMsg]);
       setProject({ ...project, status: "generating", error: null });
       setSending(true);
@@ -219,7 +348,7 @@ export default function BuilderPage({
         setSending(false);
       }
     },
-    [id, project, sending]
+    [id, project, sending, thinking, mode]
   );
 
   async function handleRestore(version: number) {
@@ -304,6 +433,65 @@ export default function BuilderPage({
       toast.error("Download failed");
     }
   }
+
+  /* ⌘/Ctrl + S downloads the current HTML */
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "s") {
+        e.preventDefault();
+        handleDownload();
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [project?.html, project?.name]);
+
+  async function handleExplain() {
+    if (!project?.html || explainLoading) return;
+    setExplainOpen(true);
+    setExplainLoading(true);
+    setExplainText("");
+    try {
+      const reply = await explainCode(project.html, project.name);
+      setExplainText(reply);
+    } catch (err) {
+      setExplainOpen(false);
+      toast.error(
+        err instanceof ApiError ? err.message : "The explainer is busy. Try again in a moment."
+      );
+    } finally {
+      setExplainLoading(false);
+    }
+  }
+
+  /* Load the two selected versions' HTML when the diff tab is active */
+  const versionsKey = project?.versions.map((v) => v.version).join(",") ?? "";
+  useEffect(() => {
+    if (tab !== "diff" || !versionsKey) return;
+    const nums = versionsKey.split(",").map(Number);
+    const to = diffTo ?? nums[0];
+    const from = diffFrom ?? nums[1] ?? nums[0];
+    setDiffTo(to);
+    setDiffFrom(from);
+    let cancelled = false;
+    setDiffLoading(true);
+    Promise.all([
+      getVersionHtml(id, from).catch(() => null),
+      getVersionHtml(id, to).catch(() => null),
+    ])
+      .then(([f, t]) => {
+        if (cancelled) return;
+        setDiffBefore(f?.html ?? "");
+        setDiffAfter(t?.html ?? "");
+      })
+      .finally(() => {
+        if (!cancelled) setDiffLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab, versionsKey]);
 
   /* --------------------------------- Screens -------------------------------- */
   if (loadingInitial) {
@@ -499,6 +687,13 @@ export default function BuilderPage({
                 <Monitor className="size-3.5" />
               </SegBtn>
               <SegBtn
+                active={device === "tablet"}
+                onClick={() => setDevice("tablet")}
+                label="Tablet preview"
+              >
+                <Tablet className="size-3.5" />
+              </SegBtn>
+              <SegBtn
                 active={device === "mobile"}
                 onClick={() => setDevice("mobile")}
                 label="Mobile preview"
@@ -508,7 +703,7 @@ export default function BuilderPage({
             </div>
           ) : null}
 
-          {/* Preview / Code segmented control (desktop) */}
+          {/* Preview / Code / Diff segmented control (desktop) */}
           <div className="hidden items-center gap-0.5 rounded-lg border border-white/10 bg-white/[0.03] p-0.5 md:flex">
             <SegBtn
               active={tab === "preview"}
@@ -525,6 +720,14 @@ export default function BuilderPage({
             >
               <Code2 className="size-3.5" />
               <span className="hidden md:inline">Code</span>
+            </SegBtn>
+            <SegBtn
+              active={tab === "diff"}
+              onClick={() => setTab("diff")}
+              label="Version diff"
+            >
+              <GitCompareArrows className="size-3.5" />
+              <span className="hidden md:inline">Diff</span>
             </SegBtn>
           </div>
 
@@ -649,6 +852,13 @@ export default function BuilderPage({
                 <Monitor className="size-3.5" />
               </SegBtn>
               <SegBtn
+                active={device === "tablet"}
+                onClick={() => setDevice("tablet")}
+                label="Tablet preview"
+              >
+                <Tablet className="size-3.5" />
+              </SegBtn>
+              <SegBtn
                 active={device === "mobile"}
                 onClick={() => setDevice("mobile")}
                 label="Mobile preview"
@@ -657,6 +867,14 @@ export default function BuilderPage({
               </SegBtn>
             </div>
           ) : null}
+
+          {/* Preview / Code / Diff (mobile row) */}
+          <div className="flex shrink-0 items-center gap-0.5 rounded-lg border border-white/10 bg-white/[0.03] p-0.5">
+            <SegBtn active={tab === "diff"} onClick={() => setTab("diff")} label="Version diff">
+              <GitCompareArrows className="size-3.5" />
+              Diff
+            </SegBtn>
+          </div>
         </div>
       </header>
 
@@ -669,6 +887,9 @@ export default function BuilderPage({
               messages={visibleMessages}
               generating={!!generating}
               sending={sending}
+              asking={thinking}
+              mode={mode}
+              onModeChange={setMode}
               onSend={handleSend}
             />
           </Panel>
@@ -681,7 +902,21 @@ export default function BuilderPage({
               previewKey={previewKey}
               generating={!!generating}
               onRefresh={() => setPreviewKey((k) => k + 1)}
-            />
+              onDownload={handleDownload}
+              onExplain={() => void handleExplain()}
+            >
+              {tab === "diff" ? (
+                <div className="flex h-full flex-col">
+                  {diffSelector}
+                  <DiffView
+                    before={diffBefore}
+                    after={diffAfter}
+                    loading={diffLoading}
+                    className="min-h-0 flex-1"
+                  />
+                </div>
+              ) : null}
+            </PreviewPanel>
           </Panel>
         </PanelGroup>
       ) : (
@@ -712,18 +947,35 @@ export default function BuilderPage({
                 messages={visibleMessages}
                 generating={!!generating}
                 sending={sending}
+                asking={thinking}
+                mode={mode}
+                onModeChange={setMode}
                 onSend={handleSend}
                 className="border-r-0"
               />
             ) : (
               <PreviewPanel
                 project={project}
-                tab={tab === "code" ? "code" : "preview"}
+                tab={tab === "code" ? "code" : tab}
                 device={device}
                 previewKey={previewKey}
                 generating={!!generating}
                 onRefresh={() => setPreviewKey((k) => k + 1)}
-              />
+                onDownload={handleDownload}
+                onExplain={() => void handleExplain()}
+              >
+                {tab === "diff" ? (
+                  <div className="flex h-full flex-col">
+                    {diffSelector}
+                    <DiffView
+                      before={diffBefore}
+                      after={diffAfter}
+                      loading={diffLoading}
+                      className="min-h-0 flex-1"
+                    />
+                  </div>
+                ) : null}
+              </PreviewPanel>
             )}
           </div>
         </div>
@@ -757,6 +1009,36 @@ export default function BuilderPage({
             >
               {renaming ? <Loader2 className="size-4 animate-spin" /> : null}
               Save
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Explain-code dialog */}
+      <Dialog open={explainOpen} onOpenChange={setExplainOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2.5 font-display text-xl tracking-normal">
+              <Lightbulb className="size-4 text-gold" />
+              How this app works
+            </DialogTitle>
+            <DialogDescription>
+              Z.AI read the code and explains it — nothing was changed.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="max-h-[60vh] overflow-y-auto whitespace-pre-wrap rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 text-sm leading-relaxed text-zinc-200">
+            {explainLoading ? (
+              <span className="flex items-center gap-2 text-muted-foreground">
+                <Loader2 className="size-4 animate-spin text-gold" />
+                Reading the code…
+              </span>
+            ) : (
+              explainText
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setExplainOpen(false)}>
+              Close
             </Button>
           </DialogFooter>
         </DialogContent>

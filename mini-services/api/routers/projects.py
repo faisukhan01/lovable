@@ -258,3 +258,27 @@ def get_code(
 ):
     project = _own_project(db, project_id, user)
     return {"html": project.html or "", "version": project.version}
+
+
+@router.get("/{project_id}/versions/{version_no}")
+def get_version_html(
+    project_id: str,
+    version_no: int,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Stored HTML of one version — powers the diff viewer."""
+    project = _own_project(db, project_id, user)
+    version = (
+        db.query(ProjectVersion)
+        .filter(ProjectVersion.project_id == project.id, ProjectVersion.version == version_no)
+        .first()
+    )
+    if not version:
+        raise HTTPException(status_code=404, detail="Version not found")
+    return {
+        "version": version.version,
+        "label": version.label,
+        "html": version.html,
+        "created_at": version.created_at.isoformat() if version.created_at else None,
+    }

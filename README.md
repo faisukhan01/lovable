@@ -1,10 +1,10 @@
 <div align="center">
 
-<img src="https://capsule-render.vercel.app/api?type=waving&color=0:050505,40:f2b95c,100:ee8f4e&height=230&section=header&text=Lovify&fontSize=88&fontColor=f8f2dc&fontAlignY=34&desc=Prompt%20it.%20Build%20it.%20Ship%20it.&descSize=20&descAlignY=56&descColor=f2b95c&animation=twinkling" width="100%" alt="Lovify banner" />
+<img src="https://capsule-render.vercel.app/api?type=soft&color=0a0a0a&height=220&section=header&text=Lovify&fontSize=88&fontColor=f2efe7&fontAlignY=38&desc=Prompt%20it.%20Build%20it.%20Ship%20it.&descSize=20&descAlignY=60&descColor=d4b36a" width="100%" alt="Lovify banner" />
 
 <!-- typewriter line -->
 <a href="https://github.com/faisukhan01/lovable">
-  <img src="https://readme-typing-svg.demolab.com?font=Space+Grotesk:wght@600&size=26&duration=2800&pause=900&color=F2B95C&center=true&vCenter=true&random=false&width=760&lines=Describe+an+app+in+plain+English...;Watch+Z.AI+design+%26+code+it+live...;Iterate+by+just+talking+to+it...;Publish+to+the+world+in+one+click." alt="Typing SVG" />
+  <img src="https://readme-typing-svg.demolab.com?font=JetBrains+Mono:wght@500&size=22&duration=2800&pause=900&color=D4B36A&center=true&vCenter=true&random=false&width=760&lines=Describe+an+app+in+plain+English...;Watch+Z.AI+design+%26+code+it+live...;Iterate+by+just+talking+to+it...;Publish+to+the+world+in+one+click." alt="Typing SVG" />
 </a>
 
 **The open-source AI app-builder platform — a Lovable & Base44 alternative, powered by Z.AI as the brain behind every feature.**
@@ -22,7 +22,7 @@
 
 <br/>
 
-<img src="docs/screenshots/hero.png" width="92%" alt="Lovify landing page — the Onyx Noir hero with the champagne-gold gradient headline" />
+<img src="docs/screenshots/mono-landing-desktop.png" width="92%" alt="Lovify landing page — the MONOLITH hero: true black, Instrument Serif italic headline" />
 
 <br/><br/>
 
@@ -55,20 +55,21 @@ No boilerplate. No config. No servers. Just describe.
 | 🔐 | **Auth & accounts** | JWT auth with bcrypt hashing on a real PostgreSQL database |
 | 📊 | **Real thumbnails** | Dashboard and gallery render actual live previews of your apps |
 | 📱 | **Fully responsive** | Mobile-first across every page — builder included (chat ⇄ preview tabs, scrollable toolbars) |
-| 🖤 | **Onyx Noir design** | A true pure-black canvas with champagne-gold accents, glass panels, aurora motion and film-grain depth |
+| 🖤 | **MONOLITH design** | A flat, hueless true-black canvas, hairline borders, editorial Instrument Serif display type, Geist UI, Geist Mono meta — and zero gradients |
 
 ## ⚙️ Tech Stack
 
 | Layer | Technology | Why |
 |---|---|---|
 | **Frontend** | [Next.js 16](https://nextjs.org) (App Router) + TypeScript 5 | Server components, streaming, zero-config routing |
-| **UI System** | Tailwind CSS 4 + shadcn/ui + Framer Motion | The "Onyx Noir" design system — pure-black glass, champagne-gold accents, spotlight hovers |
+| **UI System** | Tailwind CSS 4 + shadcn/ui + Framer Motion | The "MONOLITH" design system — flat true-black surfaces, hairline borders, one champagne-gold accent, ivory primary actions |
 | **Backend** | [FastAPI](https://fastapi.tiangolo.com) + Python 3.12 | Async-ready REST API, background task pipeline for AI builds |
 | **ORM** | SQLAlchemy 2 (typed, 2.0-style) | `TZDateTime`-safe columns, portable across SQLite and PostgreSQL |
 | **Database** | **PostgreSQL** (SQLAlchemy engine) | Production-grade relational store — users, projects, messages, versions. Free cloud hosting via [Neon](https://neon.tech); falls back to local **SQLite** when `DATABASE_URL` is unset |
 | **Auth** | JWT (python-jose) + bcrypt (passlib) | 30-day sessions, hashed passwords, Bearer-protected API |
 | **AI Brain** | [Z.AI](https://z.ai) via `z-ai-web-dev-sdk` on Bun | Dedicated micro-service (:8001) for generation, editing and prompt enhancement |
-| **Styling engine** | Tailwind CSS 4 (OKLCH color tokens) | Hairline borders, film-grain noise, aurora motion — all tokenized |
+| **Typography** | Instrument Serif · Geist · Geist Mono | Editorial display voice + precise UI face + technical meta labels |
+| **Styling engine** | Tailwind CSS 4 (OKLCH color tokens) | Flat tokenized palette, hairline borders, film-grain texture — no gradients anywhere |
 
 ## Architecture
 
@@ -177,21 +178,21 @@ Tables are created automatically on first boot — on **PostgreSQL** or SQLite, 
 
 ## Screenshots
 
-| Landing — Onyx Noir hero | Builder — chat + live preview |
+| Landing — MONOLITH hero | Builder — chat + live preview |
 |---|---|
-| <img src="docs/screenshots/hero.png" width="100%" alt="Landing page hero with champagne-gold gradient headline"/> | <img src="docs/screenshots/builder.png" width="100%" alt="Builder with chat panel and live app preview"/> |
+| <img src="docs/screenshots/mono-landing-desktop.png" width="100%" alt="Landing page hero with serif italic headline"/> | <img src="docs/screenshots/mono-builder.png" width="100%" alt="Builder with chat panel and live app preview"/> |
 
 | Dashboard — live thumbnails | Explore — public gallery |
 |---|---|
-| <img src="docs/screenshots/dashboard.png" width="100%" alt="Dashboard with live app thumbnails"/> | <img src="docs/screenshots/explore.png" width="100%" alt="Explore gallery with live previews"/> |
+| <img src="docs/screenshots/mono-dashboard.png" width="100%" alt="Dashboard with live app thumbnails"/> | <img src="docs/screenshots/mono-explore.png" width="100%" alt="Explore gallery with live previews"/> |
 
-| Describe your app | Published app + badge |
+| Features — serif card titles | Auth — serif editorial quote |
 |---|---|
-| <img src="docs/screenshots/create.png" width="100%" alt="Create project dialog with design vibes"/> | <img src="docs/screenshots/published.png" width="100%" alt="Published app with Built with Lovify badge"/> |
+| <img src="docs/screenshots/mono-landing-2.png" width="100%" alt="Feature cards with serif titles and gold icons"/> | <img src="docs/screenshots/mono-auth.png" width="100%" alt="Auth page with serif quote and ivory sign-in button"/> |
 
-| Auth — sign in / sign up | Builder on mobile |
+| Landing on mobile | Mobile navigation |
 |---|---|
-| <img src="docs/screenshots/auth.png" width="100%" alt="Auth page with gold sign-in button"/> | <img src="docs/screenshots/builder-mobile.png" width="70%" alt="Builder collapsed to chat tabs on mobile"/> |
+| <img src="docs/screenshots/mono-mobile-hero.png" width="60%" alt="Landing hero on mobile"/> | <img src="docs/screenshots/mono-mobile-menu.png" width="60%" alt="Mobile menu with mono uppercase links"/> |
 
 ## How the AI builds apps
 
@@ -207,7 +208,7 @@ Tables are created automatically on first boot — on **PostgreSQL** or SQLite, 
 - [x] Publish + Explore gallery
 - [x] Prompt enhancer + design vibes
 - [x] Fork + HTML export
-- [x] Premium "Onyx Noir" responsive redesign — pure black + champagne gold
+- [x] Premium "MONOLITH" responsive redesign — flat true black, editorial serif type, zero gradients
 - [ ] Streaming builds (token-level progress)
 - [ ] Multi-file project export
 - [ ] GitHub sync for generated apps
@@ -219,7 +220,7 @@ PRs are welcome — the stack is Next.js 16 + TypeScript on the front, FastAPI +
 
 <div align="center">
 
-<img src="https://capsule-render.vercel.app/api?type=waving&color=0:ee8f4e,60:f2b95c,100:050505&height=140&section=footer&text=Built%20with%20Z.AI%20%E2%80%94%20one%20prompt%20at%20a%20time&fontSize=22&fontColor=0a0a0a&animation=twinkling" width="100%" alt="footer" />
+<img src="https://capsule-render.vercel.app/api?type=soft&color=0a0a0a&height=130&section=footer&text=Built%20with%20Z.AI%20%E2%80%94%20one%20prompt%20at%20a%20time&fontSize=22&fontColor=f2efe7" width="100%" alt="footer" />
 
 ⭐ Star the repo if Lovify inspired you — it helps a lot!
 

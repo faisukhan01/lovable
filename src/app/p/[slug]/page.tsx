@@ -44,7 +44,7 @@ export default function PublishedAppPage({
       <div className="fixed inset-0 z-10 flex flex-col items-center justify-center gap-4">
         <BrandLogo size={40} href={null} />
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Loader2 className="size-4 animate-spin text-violet-400" />
+          <Loader2 className="size-4 animate-spin text-emerald-400" />
           Loading app…
         </div>
       </div>
@@ -66,7 +66,7 @@ export default function PublishedAppPage({
           </p>
           <Button
             asChild
-            className="mt-6 w-full bg-gradient-to-r from-fuchsia-500 to-violet-500 text-white shadow-lg shadow-violet-950/40 hover:opacity-90"
+            className="mt-6 w-full bg-gradient-to-r from-emerald-400 to-teal-500 text-emerald-950 shadow-lg shadow-black/40 hover:opacity-90"
           >
             <Link href="/">Build your own on Lovify</Link>
           </Button>

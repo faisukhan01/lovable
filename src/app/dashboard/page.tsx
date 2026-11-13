@@ -92,7 +92,7 @@ export default function DashboardPage() {
   if (!hasHydrated || !token) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <Loader2 className="size-6 animate-spin text-violet-400" aria-label="Loading" />
+        <Loader2 className="size-6 animate-spin text-emerald-400" aria-label="Loading" />
       </div>
     );
   }
@@ -103,9 +103,9 @@ export default function DashboardPage() {
     <div className="relative flex min-h-screen flex-col">
       {/* Ambient aurora backdrop */}
       <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="aurora-blob animate-aurora size-[480px] bg-violet-600/25 -left-24 -top-32" />
-        <div className="aurora-blob animate-aurora-slow size-[420px] bg-fuchsia-600/15 -right-32 top-1/3" />
-        <div className="aurora-blob animate-aurora size-[380px] bg-orange-500/10 bottom-0 left-1/3" />
+        <div className="aurora-blob animate-aurora size-[480px] bg-teal-500/25 -left-24 -top-32" />
+        <div className="aurora-blob animate-aurora-slow size-[420px] bg-emerald-500/15 -right-32 top-1/3" />
+        <div className="aurora-blob animate-aurora size-[380px] bg-lime-500/10 bottom-0 left-1/3" />
       </div>
 
       {/* Top nav */}
@@ -124,7 +124,7 @@ export default function DashboardPage() {
           </Button>
           <Button
             onClick={() => setCreateOpen(true)}
-            className="shine relative overflow-hidden bg-gradient-to-r from-fuchsia-500 to-violet-500 text-white shadow-lg shadow-violet-950/40 hover:opacity-90"
+            className="shine relative overflow-hidden bg-gradient-to-r from-emerald-400 to-teal-500 text-emerald-950 shadow-lg shadow-black/40 hover:opacity-90"
           >
             <Plus className="size-4" />
             New project
@@ -138,7 +138,7 @@ export default function DashboardPage() {
                 className="rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 <Avatar className="border border-white/10">
-                  <AvatarFallback className="bg-gradient-to-br from-violet-500/40 to-fuchsia-500/30 text-sm font-semibold text-foreground">
+                  <AvatarFallback className="bg-gradient-to-br from-emerald-500/40 to-teal-500/30 text-sm font-semibold text-foreground">
                     {initial}
                   </AvatarFallback>
                 </Avatar>
@@ -185,7 +185,7 @@ export default function DashboardPage() {
           {!loading && !error && projects.length > 0 ? (
             <div className="flex items-center gap-2">
               <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-muted-foreground">
-                <Sparkles className="size-3.5 text-fuchsia-400" />
+                <Sparkles className="size-3.5 text-emerald-400" />
                 {projects.length} app{projects.length === 1 ? "" : "s"} built
               </span>
               <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/25 bg-emerald-500/10 px-3 py-1.5 text-xs text-emerald-300">
@@ -226,7 +226,7 @@ export default function DashboardPage() {
           </div>
         ) : projects.length === 0 ? (
           <div className="flex flex-col items-center py-24 text-center">
-            <div className="animate-glow flex size-16 items-center justify-center rounded-3xl bg-gradient-to-br from-fuchsia-500 to-violet-500 shadow-xl shadow-violet-950/50">
+            <div className="animate-glow flex size-16 items-center justify-center rounded-3xl bg-gradient-to-br from-emerald-400 to-teal-500 shadow-xl shadow-black/50">
               <Sparkles className="size-7 text-white" />
             </div>
             <h2 className="mt-6 font-display text-xl font-semibold">
@@ -237,7 +237,7 @@ export default function DashboardPage() {
             </p>
             <Button
               onClick={() => setCreateOpen(true)}
-              className="mt-6 bg-gradient-to-r from-fuchsia-500 to-violet-500 text-white shadow-lg shadow-violet-950/40 hover:opacity-90"
+              className="mt-6 bg-gradient-to-r from-emerald-400 to-teal-500 text-emerald-950 shadow-lg shadow-black/40 hover:opacity-90"
             >
               <Sparkles className="size-4" />
               Create your first app

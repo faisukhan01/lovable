@@ -55,13 +55,13 @@ const FEATURES: { icon: LucideIcon; title: string; text: string; gradient: strin
     icon: Wand2,
     title: "Prompt to product",
     text: "One paragraph becomes a complete, working app with real UI, logic and data persistence — not a mockup.",
-    gradient: "from-fuchsia-500 to-violet-500",
+    gradient: "from-emerald-400 to-teal-500",
   },
   {
     icon: MessagesSquare,
     title: "Refine by conversation",
     text: "“Make the header glassy and add search.” Talk to it like a teammate and watch changes land in seconds.",
-    gradient: "from-violet-500 to-orange-400",
+    gradient: "from-teal-500 to-lime-400",
   },
   {
     icon: MonitorSmartphone,
@@ -73,19 +73,19 @@ const FEATURES: { icon: LucideIcon; title: string; text: string; gradient: strin
     icon: History,
     title: "Version history",
     text: "Every change is a version. Browse the timeline and roll back to any point with one click.",
-    gradient: "from-orange-500 to-rose-500",
+    gradient: "from-amber-500 to-lime-500",
   },
   {
     icon: Rocket,
     title: "One-click publish",
     text: "Ship your app to a public URL instantly. No servers, no config — your app is live when you are.",
-    gradient: "from-purple-500 to-fuchsia-500",
+    gradient: "from-emerald-600 to-green-500",
   },
   {
     icon: BrainCircuit,
     title: "Z.AI brain",
     text: "Every feature runs on Z.AI models — generation, editing, and platform intelligence.",
-    gradient: "from-amber-500 to-orange-500",
+    gradient: "from-teal-600 to-emerald-400",
   },
 ];
 
@@ -94,29 +94,29 @@ const STEPS: { icon: LucideIcon; title: string; text: string; gradient: string }
     icon: PenLine,
     title: "Describe it",
     text: "Type what you want — features, vibe, pages. The more specific, the better.",
-    gradient: "from-violet-500 to-fuchsia-500",
+    gradient: "from-teal-500 to-emerald-500",
   },
   {
     icon: Sparkles,
     title: "Watch it build",
     text: "Z.AI architects the UI, writes the code and assembles a working app in real time.",
-    gradient: "from-fuchsia-500 to-orange-400",
+    gradient: "from-emerald-500 to-lime-400",
   },
   {
     icon: Rocket,
     title: "Refine & publish",
     text: "Chat your tweaks, pick a version, hit publish — share the link with the world.",
-    gradient: "from-orange-500 to-rose-500",
+    gradient: "from-amber-500 to-lime-500",
   },
 ];
 
 const TILE_GRADIENTS = [
-  "from-violet-500/20 to-fuchsia-500/10",
-  "from-fuchsia-500/15 to-orange-400/10",
-  "from-purple-500/20 to-fuchsia-500/10",
-  "from-orange-400/15 to-rose-500/10",
-  "from-fuchsia-500/20 to-violet-500/15",
-  "from-violet-500/15 to-orange-400/10",
+  "from-teal-500/20 to-emerald-500/10",
+  "from-teal-500/15 to-lime-400/10",
+  "from-emerald-600/20 to-emerald-500/10",
+  "from-lime-400/15 to-teal-500/10",
+  "from-emerald-500/20 to-teal-500/15",
+  "from-teal-500/15 to-lime-400/10",
 ];
 
 const TILE_NAME_BARS = ["w-3/4", "w-2/3", "w-4/5", "w-1/2", "w-3/5", "w-2/3"];
@@ -189,7 +189,7 @@ function FeatureCard({ icon: Icon, title, text, gradient, index }: {
     <motion.div
       variants={staggerItem}
       transition={{ delay: index * 0.02 }}
-      className="glass-panel group rounded-2xl p-6 transition-all duration-300 hover:-translate-y-1 hover:border-violet-400/30! hover:shadow-xl hover:shadow-violet-950/30"
+      className="glass-panel group rounded-2xl p-6 transition-all duration-300 hover:-translate-y-1 hover:border-emerald-400/30! hover:shadow-xl hover:shadow-black/30"
     >
       <div
         className={`flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br ${gradient} shadow-lg shadow-black/30 ring-1 ring-white/15 transition-transform duration-300 group-hover:scale-105`}
@@ -219,7 +219,7 @@ function StepCard({ icon: Icon, title, text, gradient, number }: {
           {number}
         </span>
         <div
-          className={`absolute bottom-0 left-9 flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br ${gradient} shadow-lg shadow-violet-950/40 ring-1 ring-white/15`}
+          className={`absolute bottom-0 left-9 flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br ${gradient} shadow-lg shadow-black/40 ring-1 ring-white/15`}
         >
           <Icon className="h-5 w-5 text-white" aria-hidden="true" />
         </div>
@@ -232,7 +232,7 @@ function StepCard({ icon: Icon, title, text, gradient, number }: {
 
 function BrowserMock() {
   return (
-    <div className="overflow-hidden rounded-2xl border border-white/10 bg-card shadow-2xl shadow-violet-950/40 animate-float" style={{ animationDuration: "7s" }}>
+    <div className="overflow-hidden rounded-2xl border border-white/10 bg-card shadow-2xl shadow-black/40 animate-float" style={{ animationDuration: "7s" }}>
       {/* window chrome */}
       <div className="relative flex items-center justify-center border-b border-white/5 bg-white/[0.02] px-4 py-3">
         <div className="absolute left-4 flex items-center gap-1.5">
@@ -248,16 +248,16 @@ function BrowserMock() {
       {/* storefront body */}
       <div className="flex aspect-[16/10]">
         <aside className="hidden w-1/5 flex-col gap-1.5 border-r border-white/5 bg-white/[0.02] p-3 sm:flex">
-          <div className="mb-3 h-3 w-16 rounded-full bg-gradient-to-r from-fuchsia-500/50 to-violet-500/50" />
+          <div className="mb-3 h-3 w-16 rounded-full bg-gradient-to-r from-emerald-500/50 to-teal-500/50" />
           {[0, 1, 2, 3, 4].map((i) => (
             <div
               key={i}
               className={`flex items-center gap-2 rounded-lg px-2 py-1.5 ${
-                i === 0 ? "border border-violet-400/20 bg-white/5" : ""
+                i === 0 ? "border border-emerald-400/20 bg-white/5" : ""
               }`}
             >
-              <span className={`h-2 w-2 rounded-full ${i === 0 ? "bg-violet-400/70" : "bg-white/10"}`} />
-              <span className={`h-2 flex-1 rounded-full ${i === 0 ? "bg-violet-400/40" : "bg-white/5"}`} />
+              <span className={`h-2 w-2 rounded-full ${i === 0 ? "bg-emerald-400/70" : "bg-white/10"}`} />
+              <span className={`h-2 flex-1 rounded-full ${i === 0 ? "bg-emerald-400/40" : "bg-white/5"}`} />
             </div>
           ))}
         </aside>
@@ -269,7 +269,7 @@ function BrowserMock() {
             </div>
             <div className="ml-auto flex items-center gap-2">
               <span className="h-2 w-10 rounded-full bg-white/10" />
-              <span className="h-7 w-7 rounded-full bg-gradient-to-br from-orange-400 via-rose-400 to-fuchsia-500 ring-1 ring-white/15" />
+              <span className="h-7 w-7 rounded-full bg-gradient-to-br from-lime-400 via-teal-400 to-emerald-500 ring-1 ring-white/15" />
             </div>
           </div>
           <div className="grid flex-1 grid-cols-2 gap-3 sm:grid-cols-3">
@@ -300,14 +300,14 @@ interface LiveApp {
 
 function LiveAppFrame({ app, index }: { app: LiveApp; index: number }) {
   const gradients = [
-    "from-fuchsia-500/20 to-violet-500/10",
-    "from-violet-500/20 to-orange-400/10",
-    "from-orange-400/20 to-rose-500/10",
+    "from-emerald-500/20 to-teal-500/10",
+    "from-teal-500/20 to-lime-400/10",
+    "from-lime-400/20 to-teal-500/10",
   ];
   return (
     <motion.div
       variants={staggerItem}
-      className={`overflow-hidden rounded-2xl border border-white/10 bg-card shadow-xl shadow-violet-950/30 transition-all duration-300 hover:-translate-y-1 hover:border-violet-400/40 hover:shadow-2xl hover:shadow-violet-950/50 ${
+      className={`overflow-hidden rounded-2xl border border-white/10 bg-card shadow-xl shadow-black/30 transition-all duration-300 hover:-translate-y-1 hover:border-emerald-400/40 hover:shadow-2xl hover:shadow-black/50 ${
         index === 0 ? "lg:col-span-2 lg:row-span-1" : ""
       }`}
     >
@@ -461,7 +461,7 @@ export default function Home() {
                   </Button>
                   <Button
                     asChild
-                    className="bg-gradient-to-r from-fuchsia-500 to-violet-500 text-white shadow-lg shadow-fuchsia-950/30 hover:brightness-110"
+                    className="bg-gradient-to-r from-emerald-400 to-teal-500 text-emerald-950 shadow-lg shadow-black/30 hover:brightness-110"
                   >
                     <Link href="/auth">Start building</Link>
                   </Button>
@@ -476,9 +476,9 @@ export default function Home() {
         {/* ------------------------------ hero ------------------------------ */}
         <section className="relative overflow-hidden pb-20 pt-32">
           <div aria-hidden="true" className="pointer-events-none absolute inset-0">
-            <div className="aurora-blob animate-aurora -left-24 -top-24 h-[520px] w-[520px] bg-fuchsia-600/40" />
-            <div className="aurora-blob animate-aurora-slow -right-40 top-10 h-[620px] w-[620px] bg-violet-600/40" />
-            <div className="aurora-blob animate-aurora -bottom-32 left-1/3 h-[480px] w-[480px] bg-orange-500/25" />
+            <div className="aurora-blob animate-aurora -left-24 -top-24 h-[520px] w-[520px] bg-emerald-500/30" />
+            <div className="aurora-blob animate-aurora-slow -right-40 top-10 h-[620px] w-[620px] bg-teal-500/30" />
+            <div className="aurora-blob animate-aurora -bottom-32 left-1/3 h-[480px] w-[480px] bg-lime-500/20" />
             <div className="absolute inset-0 bg-grid" />
           </div>
 
@@ -490,7 +490,7 @@ export default function Home() {
               className="flex justify-center"
             >
               <span className="glass-panel inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm text-muted-foreground">
-                <Sparkles className="h-4 w-4 text-fuchsia-400" aria-hidden="true" />
+                <Sparkles className="h-4 w-4 text-emerald-400" aria-hidden="true" />
                 Powered by Z.AI — the brain behind every build
                 <span className="ml-1 h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" aria-hidden="true" />
               </span>
@@ -526,13 +526,13 @@ export default function Home() {
             >
               <div
                 aria-hidden="true"
-                className="absolute -inset-2 rounded-3xl bg-gradient-to-r from-fuchsia-500/15 via-violet-500/15 to-orange-400/15 blur-2xl"
+                className="absolute -inset-2 rounded-3xl bg-gradient-to-r from-emerald-400/15 via-teal-500/15 to-lime-400/15 blur-2xl"
               />
               <div
                 className={`relative rounded-2xl bg-gradient-to-r p-[1.5px] transition-all duration-300 ${
                   focused
-                    ? "from-fuchsia-500 via-violet-500 to-orange-400 shadow-xl shadow-violet-950/40"
-                    : "from-fuchsia-500/60 via-violet-500/60 to-orange-400/60"
+                    ? "from-emerald-400 via-teal-500 to-lime-400 shadow-xl shadow-black/40"
+                    : "from-emerald-400/60 via-teal-500/60 to-lime-400/60"
                 }`}
               >
                 <div className="rounded-[calc(1rem-1px)] bg-background/80 p-4 backdrop-blur-xl">
@@ -567,7 +567,7 @@ export default function Home() {
                     <Button
                       onClick={submitPrompt}
                       disabled={creating}
-                      className="gap-2 bg-gradient-to-r from-fuchsia-500 to-violet-500 text-white shadow-lg shadow-fuchsia-950/40 hover:brightness-110"
+                      className="gap-2 bg-gradient-to-r from-emerald-400 to-teal-500 text-emerald-950 shadow-lg shadow-black/40 hover:brightness-110"
                     >
                       {creating ? (
                         <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
@@ -595,7 +595,7 @@ export default function Home() {
                     key={ex.icon}
                     type="button"
                     onClick={() => fillPrompt(ex.prompt)}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.03] px-3.5 py-1.5 text-sm text-muted-foreground transition hover:border-violet-400/40 hover:bg-violet-500/10 hover:text-foreground"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.03] px-3.5 py-1.5 text-sm text-muted-foreground transition hover:border-emerald-400/40 hover:bg-emerald-500/10 hover:text-foreground"
                   >
                     <Icon className="h-3.5 w-3.5" aria-hidden="true" />
                     {ex.title}
@@ -625,7 +625,7 @@ export default function Home() {
               transition={{ duration: 0.55, ease: "easeOut" }}
               className="text-center"
             >
-              <p className="text-sm font-medium uppercase tracking-widest text-fuchsia-400">Everything included</p>
+              <p className="text-sm font-medium uppercase tracking-widest text-emerald-400">Everything included</p>
               <h2 className="mt-3 font-display text-4xl font-bold">A complete builder, not a toy</h2>
             </motion.div>
             <motion.div
@@ -652,7 +652,7 @@ export default function Home() {
               transition={{ duration: 0.55, ease: "easeOut" }}
               className="text-center"
             >
-              <p className="text-sm font-medium uppercase tracking-widest text-fuchsia-400">How it works</p>
+              <p className="text-sm font-medium uppercase tracking-widest text-emerald-400">How it works</p>
               <h2 className="mt-3 font-display text-4xl font-bold">From idea to live app in three moves</h2>
             </motion.div>
             <motion.div
@@ -686,7 +686,7 @@ export default function Home() {
               transition={{ duration: 0.55, ease: "easeOut" }}
               className="text-center"
             >
-              <p className="text-sm font-medium uppercase tracking-widest text-fuchsia-400">See it in action</p>
+              <p className="text-sm font-medium uppercase tracking-widest text-emerald-400">See it in action</p>
               <h2 className="mt-3 font-display text-4xl font-bold">Real apps. Zero boilerplate.</h2>
               <p className="mx-auto mt-4 max-w-xl text-muted-foreground">
                 {liveApps && liveApps.length > 0
@@ -722,7 +722,7 @@ export default function Home() {
                   avg build 38s
                 </span>
                 <span className="glass-panel inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm text-muted-foreground">
-                  <LayoutGrid className="h-4 w-4 text-fuchsia-400" aria-hidden="true" />
+                  <LayoutGrid className="h-4 w-4 text-emerald-400" aria-hidden="true" />
                   pixel-perfect responsive
                 </span>
                 <span className="glass-panel inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm text-muted-foreground">
@@ -743,7 +743,7 @@ export default function Home() {
         {/* -------------------------------- CTA -------------------------------- */}
         <section className="relative overflow-hidden py-28 text-center">
           <div aria-hidden="true" className="pointer-events-none absolute inset-0">
-            <div className="aurora-blob animate-aurora-slow left-1/2 top-1/2 h-[450px] w-[450px] -translate-x-1/2 -translate-y-1/2 bg-violet-600/20" />
+            <div className="aurora-blob animate-aurora-slow left-1/2 top-1/2 h-[450px] w-[450px] -translate-x-1/2 -translate-y-1/2 bg-teal-500/20" />
           </div>
           <motion.div
             initial={{ opacity: 0, y: 24 }}
@@ -761,7 +761,7 @@ export default function Home() {
             <div className="mt-8 flex justify-center">
               <Button
                 asChild
-                className="shine relative h-12 overflow-hidden px-8 text-base bg-gradient-to-r from-fuchsia-500 to-violet-500 text-white shadow-xl shadow-fuchsia-950/40 hover:brightness-110"
+                className="shine relative h-12 overflow-hidden px-8 text-base bg-gradient-to-r from-emerald-400 to-teal-500 text-emerald-950 shadow-xl shadow-black/40 hover:brightness-110"
               >
                 <Link href="/auth">
                   <Sparkles className="mr-2 h-5 w-5" aria-hidden="true" />

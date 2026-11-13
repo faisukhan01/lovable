@@ -28,7 +28,7 @@ function AssistantAvatar({
   return (
     <span
       className={cn(
-        "mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-fuchsia-500 to-violet-500 shadow-md shadow-violet-950/40",
+        "mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-400 to-teal-500 shadow-md shadow-black/40",
         className
       )}
     >
@@ -91,7 +91,7 @@ export function ChatPanel({
     <div className={cn("flex h-full flex-col border-r border-white/5", className)}>
       {/* Panel header */}
       <div className="flex h-11 shrink-0 items-center gap-2 border-b border-white/5 px-4 text-sm">
-        <Sparkles className="size-4 text-fuchsia-400" />
+        <Sparkles className="size-4 text-emerald-400" />
         <span className="font-medium text-foreground">Lovify AI</span>
         <span className="text-[10px] uppercase tracking-widest text-muted-foreground/70">
           powered by Z.AI
@@ -103,7 +103,7 @@ export function ChatPanel({
         <div className="flex min-h-full flex-col gap-3 px-4 py-4">
           {messages.length === 0 && !generating ? (
             <div className="flex flex-col items-center gap-3 py-12 text-center">
-              <div className="flex size-12 items-center justify-center rounded-2xl bg-gradient-to-br from-fuchsia-500 to-violet-500 shadow-lg shadow-violet-950/40">
+              <div className="flex size-12 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 shadow-lg shadow-black/40">
                 <Sparkles className="size-5 text-white" />
               </div>
               <p className="font-display text-sm font-semibold">
@@ -120,7 +120,7 @@ export function ChatPanel({
             m.role === "user" ? (
               <div
                 key={m.id}
-                className="max-w-[85%] self-end whitespace-pre-wrap rounded-2xl rounded-br-md border border-violet-400/20 bg-gradient-to-br from-violet-500/25 to-fuchsia-500/15 px-4 py-2.5 text-sm"
+                className="max-w-[85%] self-end whitespace-pre-wrap rounded-2xl rounded-br-md border border-emerald-400/20 bg-gradient-to-br from-emerald-500/25 to-teal-500/15 px-4 py-2.5 text-sm"
               >
                 {m.content}
               </div>
@@ -140,13 +140,13 @@ export function ChatPanel({
               <AssistantAvatar />
               <div className="glass-panel flex items-center gap-3 rounded-2xl rounded-tl-md px-4 py-3">
                 <span aria-hidden className="flex items-center gap-1">
-                  <span className="thinking-dot size-2 rounded-full bg-fuchsia-400" />
+                  <span className="thinking-dot size-2 rounded-full bg-emerald-400" />
                   <span
-                    className="thinking-dot size-2 rounded-full bg-fuchsia-400"
+                    className="thinking-dot size-2 rounded-full bg-emerald-400"
                     style={{ animationDelay: "0.15s" }}
                   />
                   <span
-                    className="thinking-dot size-2 rounded-full bg-fuchsia-400"
+                    className="thinking-dot size-2 rounded-full bg-emerald-400"
                     style={{ animationDelay: "0.3s" }}
                   />
                 </span>
@@ -183,7 +183,7 @@ export function ChatPanel({
 
       {/* Input */}
       <div className="p-3 pb-4">
-        <div className="relative rounded-2xl border border-white/10 bg-white/[0.03] transition-colors focus-within:border-violet-400/50">
+        <div className="relative rounded-2xl border border-white/10 bg-white/[0.03] transition-colors focus-within:border-emerald-400/50">
           <Textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -208,7 +208,7 @@ export function ChatPanel({
             onClick={() => void submit()}
             disabled={generating || sending || !input.trim()}
             aria-label="Send message"
-            className="absolute bottom-2 right-2 size-8 rounded-lg border-0 bg-gradient-to-r from-fuchsia-500 to-violet-500 p-0 text-white shadow-md shadow-violet-950/40 hover:opacity-90"
+            className="absolute bottom-2 right-2 size-8 rounded-lg border-0 bg-gradient-to-r from-emerald-400 to-teal-500 p-0 text-white shadow-md shadow-black/40 hover:opacity-90"
           >
             {sending ? (
               <Loader2 className="size-4 animate-spin" />
@@ -222,7 +222,7 @@ export function ChatPanel({
             type="button"
             onClick={() => void enhance()}
             disabled={enhancing || generating || input.trim().length < 8}
-            className="inline-flex items-center gap-1.5 rounded-full border border-fuchsia-400/25 bg-fuchsia-500/10 px-2.5 py-1 text-[11px] text-fuchsia-200 transition-colors hover:bg-fuchsia-500/20 disabled:opacity-40"
+            className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/25 bg-emerald-500/10 px-2.5 py-1 text-[11px] text-emerald-200 transition-colors hover:bg-emerald-500/20 disabled:opacity-40"
             title="Let Z.AI rewrite your request into a richer, more specific brief"
           >
             {enhancing ? (

@@ -66,7 +66,7 @@ export default function ExplorePage() {
             </Button>
             <Button
               asChild
-              className="bg-gradient-to-r from-fuchsia-500 to-violet-500 text-white shadow-lg shadow-fuchsia-950/30 hover:brightness-110"
+              className="bg-gradient-to-r from-emerald-400 to-teal-500 text-emerald-950 shadow-lg shadow-black/30 hover:brightness-110"
             >
               <Link href="/">Start building</Link>
             </Button>
@@ -77,13 +77,13 @@ export default function ExplorePage() {
       <main className="flex-1">
         <section className="relative overflow-hidden pb-10 pt-16 text-center">
           <div aria-hidden="true" className="pointer-events-none absolute inset-0">
-            <div className="aurora-blob animate-aurora -left-24 -top-32 h-[420px] w-[420px] bg-fuchsia-600/25" />
-            <div className="aurora-blob animate-aurora-slow -right-32 top-0 h-[480px] w-[480px] bg-violet-600/25" />
+            <div className="aurora-blob animate-aurora -left-24 -top-32 h-[420px] w-[420px] bg-emerald-500/20" />
+            <div className="aurora-blob animate-aurora-slow -right-32 top-0 h-[480px] w-[480px] bg-teal-500/25" />
             <div className="absolute inset-0 bg-grid" />
           </div>
           <div className="relative mx-auto max-w-3xl px-6">
             <span className="glass-panel inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm text-muted-foreground">
-              <Sparkles className="h-4 w-4 text-fuchsia-400" aria-hidden="true" />
+              <Sparkles className="h-4 w-4 text-emerald-400" aria-hidden="true" />
               Fresh from the community
             </span>
             <h1 className="mt-6 font-display text-4xl font-bold sm:text-5xl">
@@ -104,12 +104,12 @@ export default function ExplorePage() {
             </div>
           ) : apps === null ? (
             <div className="flex items-center justify-center gap-3 py-24 text-sm text-muted-foreground">
-              <Loader2 className="size-5 animate-spin text-violet-400" />
+              <Loader2 className="size-5 animate-spin text-emerald-400" />
               Loading the gallery…
             </div>
           ) : apps.length === 0 ? (
             <div className="glass-panel mx-auto mt-10 max-w-md rounded-2xl p-10 text-center">
-              <div className="animate-glow mx-auto flex size-14 items-center justify-center rounded-2xl bg-gradient-to-br from-fuchsia-500 to-violet-500 shadow-xl shadow-violet-950/50">
+              <div className="animate-glow mx-auto flex size-14 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 shadow-xl shadow-black/50">
                 <Sparkles className="size-6 text-white" aria-hidden="true" />
               </div>
               <h2 className="mt-5 font-display text-lg font-semibold">Nothing published yet</h2>
@@ -118,7 +118,7 @@ export default function ExplorePage() {
               </p>
               <Button
                 asChild
-                className="mt-6 bg-gradient-to-r from-fuchsia-500 to-violet-500 text-white shadow-lg shadow-fuchsia-950/30 hover:brightness-110"
+                className="mt-6 bg-gradient-to-r from-emerald-400 to-teal-500 text-emerald-950 shadow-lg shadow-black/30 hover:brightness-110"
               >
                 <Link href="/">Build the first one</Link>
               </Button>
@@ -135,7 +135,7 @@ export default function ExplorePage() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, margin: "-40px" }}
                   transition={{ duration: 0.5, ease: "easeOut", delay: (i % 3) * 0.06 }}
-                  className={`group overflow-hidden rounded-2xl border border-white/10 bg-card shadow-xl shadow-violet-950/20 transition-all duration-300 hover:-translate-y-1 hover:border-violet-400/40 hover:shadow-2xl hover:shadow-violet-950/40 ${
+                  className={`group overflow-hidden rounded-2xl border border-white/10 bg-card shadow-xl shadow-black/30 transition-all duration-300 hover:-translate-y-1 hover:border-emerald-400/40 hover:shadow-2xl hover:shadow-black/40 ${
                     i === 0 ? "sm:col-span-2" : ""
                   }`}
                 >

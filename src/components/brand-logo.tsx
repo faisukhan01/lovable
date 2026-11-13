@@ -17,11 +17,11 @@ export function BrandLogo({
   const inner = (
     <span className={`inline-flex items-center gap-2.5 ${className}`}>
       <span
-        className="relative inline-flex items-center justify-center rounded-[26%] shadow-lg shadow-violet-950/40"
+        className="relative inline-flex items-center justify-center rounded-[26%] shadow-lg shadow-black/40"
         style={{
           width: size,
           height: size,
-          background: "linear-gradient(135deg, #e879f9 0%, #8b5cf6 55%, #fb923c 100%)",
+          background: "linear-gradient(135deg, #34d399 0%, #14b8a6 55%, #a3e635 100%)",
         }}
       >
         <svg
@@ -29,7 +29,7 @@ export function BrandLogo({
           width={size * 0.62}
           height={size * 0.62}
           fill="none"
-          stroke="#0a0812"
+          stroke="#0c1210"
           strokeWidth={9}
           strokeLinecap="round"
           strokeLinejoin="round"

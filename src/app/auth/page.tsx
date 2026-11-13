@@ -94,8 +94,8 @@ function AuthPanel() {
       {/* --------------------------- left showcase --------------------------- */}
       <div className="relative hidden flex-col justify-center overflow-hidden border-r border-white/5 px-14 lg:flex">
         <div aria-hidden="true" className="pointer-events-none absolute inset-0">
-          <div className="aurora-blob animate-aurora -left-32 -top-24 h-[480px] w-[480px] bg-fuchsia-600/25" />
-          <div className="aurora-blob animate-aurora-slow -bottom-32 -right-24 h-[520px] w-[520px] bg-violet-600/25" />
+          <div className="aurora-blob animate-aurora -left-32 -top-24 h-[480px] w-[480px] bg-emerald-500/20" />
+          <div className="aurora-blob animate-aurora-slow -bottom-32 -right-24 h-[520px] w-[520px] bg-teal-500/25" />
           <div className="absolute inset-0 bg-grid" />
         </div>
 
@@ -142,7 +142,7 @@ function AuthPanel() {
             </p>
           </div>
 
-          <div className="glass-panel rounded-2xl p-6 shadow-2xl shadow-violet-950/20 sm:p-8">
+          <div className="glass-panel rounded-2xl p-6 shadow-2xl shadow-black/30 sm:p-8">
             <Tabs value={tab} onValueChange={(v) => setTab(v as "signin" | "signup")}>
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="signin">Sign in</TabsTrigger>
@@ -179,7 +179,7 @@ function AuthPanel() {
                   <Button
                     type="submit"
                     disabled={loading}
-                    className="h-11 w-full bg-gradient-to-r from-fuchsia-500 to-violet-500 text-white shadow-lg shadow-fuchsia-950/30 hover:brightness-110"
+                    className="h-11 w-full bg-gradient-to-r from-emerald-400 to-teal-500 text-emerald-950 shadow-lg shadow-black/30 hover:brightness-110"
                   >
                     {loading && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
                     {loading ? "Signing in…" : "Sign in"}
@@ -231,7 +231,7 @@ function AuthPanel() {
                   <Button
                     type="submit"
                     disabled={loading}
-                    className="h-11 w-full bg-gradient-to-r from-fuchsia-500 to-violet-500 text-white shadow-lg shadow-fuchsia-950/30 hover:brightness-110"
+                    className="h-11 w-full bg-gradient-to-r from-emerald-400 to-teal-500 text-emerald-950 shadow-lg shadow-black/30 hover:brightness-110"
                   >
                     {loading && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
                     {loading ? "Creating account…" : "Create account"}
@@ -260,7 +260,7 @@ function AuthPanel() {
           aria-live="polite"
           className="fixed inset-0 z-[100] flex flex-col items-center justify-center gap-4 bg-background/95 backdrop-blur"
         >
-          <Loader2 className="h-8 w-8 animate-spin text-fuchsia-400" aria-hidden="true" />
+          <Loader2 className="h-8 w-8 animate-spin text-emerald-400" aria-hidden="true" />
           <p className="font-display text-lg text-muted-foreground">Spinning up your app…</p>
         </div>
       ) : null}

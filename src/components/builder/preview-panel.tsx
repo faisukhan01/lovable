@@ -131,7 +131,7 @@ export function PreviewPanel({
             {generating ? (
               <>
                 {/* Slim progress bar while re-generating with existing html */}
-                <div className="absolute inset-x-0 top-0 z-20 h-0.5 animate-pulse bg-gradient-to-r from-fuchsia-500 via-violet-500 to-orange-400" />
+                <div className="absolute inset-x-0 top-0 z-20 h-0.5 animate-pulse bg-gradient-to-r from-emerald-400 via-teal-500 to-lime-400" />
                 <div className="absolute right-3 top-3 z-20 inline-flex items-center gap-1.5 rounded-full border border-amber-400/30 bg-amber-500/10 px-2.5 py-1 text-[10px] font-medium uppercase tracking-wider text-amber-300">
                   <span className="size-1.5 animate-pulse rounded-full bg-amber-400" />
                   Updating…
@@ -163,7 +163,7 @@ export function PreviewPanel({
           <div className="relative flex h-full w-full items-center justify-center overflow-hidden">
             <div aria-hidden className="absolute inset-0 bg-grid" />
             <div className="relative flex max-w-xs flex-col items-center gap-4 px-6 text-center">
-              <div className="animate-glow flex size-16 items-center justify-center rounded-3xl bg-gradient-to-br from-fuchsia-500 to-violet-500 shadow-xl shadow-violet-950/50">
+              <div className="animate-glow flex size-16 items-center justify-center rounded-3xl bg-gradient-to-br from-emerald-400 to-teal-500 shadow-xl shadow-black/50">
                 <Sparkles className="size-7 text-white" />
               </div>
               <div>

@@ -193,7 +193,7 @@ export function ProjectCard({
             open();
           }
         }}
-        className="group glass-panel cursor-pointer overflow-hidden rounded-2xl transition-all duration-300 hover:border-violet-400/30! hover:shadow-xl hover:shadow-violet-950/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="group glass-panel cursor-pointer overflow-hidden rounded-2xl transition-all duration-300 hover:border-emerald-400/30! hover:shadow-xl hover:shadow-black/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         {/* Live preview window */}
         <div className="relative aspect-video overflow-hidden bg-zinc-950">
@@ -207,7 +207,7 @@ export function ProjectCard({
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent" />
             </>
           ) : (
-            <div className="absolute inset-0 bg-gradient-to-br from-violet-500/15 via-fuchsia-500/10 to-orange-500/10" />
+            <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/15 via-teal-500/10 to-lime-500/10" />
           )}
 
           {project.published_slug ? (
@@ -317,7 +317,7 @@ export function ProjectCard({
             <Button
               onClick={() => void handleRename()}
               disabled={renaming || !renameValue.trim()}
-              className="bg-gradient-to-r from-fuchsia-500 to-violet-500 text-white hover:opacity-90"
+              className="bg-gradient-to-r from-emerald-400 to-teal-500 text-white hover:opacity-90"
             >
               {renaming ? <Loader2 className="size-4 animate-spin" /> : null}
               Save

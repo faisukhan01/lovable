@@ -16,6 +16,16 @@ router = APIRouter(prefix="/api/projects", tags=["projects"])
 
 STALE_AFTER = timedelta(minutes=5)
 
+# Local <link href>/<script src> tags inside imported HTML — attribute order and quote style vary.
+_LINK_TAG_RE = re.compile(
+    r"<link\b[^>]*?(?<![\w-])href\s*=\s*(?P<q>[\"']?)(?P<ref>[^\"'>\s]+)(?P=q)[^>]*>",
+    re.IGNORECASE,
+)
+_SCRIPT_TAG_RE = re.compile(
+    r"<script\b[^>]*?(?<![\w-])src\s*=\s*(?P<q>[\"']?)(?P<ref>[^\"'>\s]+)(?P=q)[^>]*>\s*</script>",
+    re.IGNORECASE,
+)
+
 
 def _own_project(db: Session, project_id: str, user: User) -> Project:
     project = db.get(Project, project_id)
@@ -79,6 +89,80 @@ def _detail(db: Session, p: Project) -> dict:
     return data
 
 
+def _local_basename(ref: str) -> str:
+    """Basename of a local href/src reference — query, hash and separators ignored."""
+    return ref.split("?", 1)[0].split("#", 1)[0].replace("\\", "/").rsplit("/", 1)[-1].lower()
+
+
+def _assemble_imported_html(files: list, name: str = "Imported App") -> tuple[str, list[str]]:
+    """One self-contained HTML page from imported files: inline local css/js, or synthesize a page."""
+    by_basename = {}
+    for f in files:
+        by_basename.setdefault(_local_basename(f["path"]), f)
+
+    entry = by_basename.get("index.html") or next(
+        (f for f in files if f["path"].lower().endswith((".html", ".htm"))), None
+    )
+    inlined: list[str] = []
+
+    if not entry:
+        # No HTML in the upload — build a minimal page around the css/js we do have.
+        css_parts, js_parts = [], []
+        for f in files:
+            if "\x00" in f["content"]:
+                continue  # binary-looking
+            if f["path"].lower().endswith(".css"):
+                css_parts.append(f["content"])
+            elif f["path"].lower().endswith(".js"):
+                js_parts.append(f["content"])
+            else:
+                continue
+            if f["path"] not in inlined:
+                inlined.append(f["path"])
+        css = "\n\n".join(css_parts)
+        js = "\n\n".join(js_parts)
+        return (
+            "<!DOCTYPE html>\n<html>\n<head>\n"
+            '<meta charset="utf-8">\n'
+            '<meta name="viewport" content="width=device-width, initial-scale=1">\n'
+            f"<title>{name}</title>\n"
+            f"<style>\n{css}\n</style>\n"
+            "</head>\n<body>\n"
+            f"<script>\n{js}\n</script>\n"
+            "</body>\n</html>"
+        ), inlined
+
+    html = entry["content"]
+
+    def _inline_css(match) -> str:
+        target = by_basename.get(_local_basename(match.group("ref")))
+        if not target or not target["path"].lower().endswith(".css"):
+            return match.group(0)
+        if target["path"] not in inlined:
+            inlined.append(target["path"])
+        return f"<style>\n{target['content']}\n</style>"
+
+    def _inline_js(match) -> str:
+        target = by_basename.get(_local_basename(match.group("ref")))
+        if not target or not target["path"].lower().endswith(".js"):
+            return match.group(0)
+        if target["path"] not in inlined:
+            inlined.append(target["path"])
+        return f"<script>\n{target['content']}\n</script>"
+
+    html = _LINK_TAG_RE.sub(_inline_css, html)
+    html = _SCRIPT_TAG_RE.sub(_inline_js, html)
+    if not html.strip():
+        html = (
+            "<!DOCTYPE html>\n<html>\n<head>\n"
+            '<meta charset="utf-8">\n'
+            '<meta name="viewport" content="width=device-width, initial-scale=1">\n'
+            f"<title>{name}</title>\n"
+            "</head>\n<body></body>\n</html>"
+        )
+    return html, inlined
+
+
 @router.get("")
 def list_projects(
     with_html: int = 0,
@@ -120,6 +204,75 @@ def create_project(
     db.refresh(project)
 
     background.add_task(run_generation, project.id, "create", prompt)
+    return _detail(db, project)
+
+
+@router.post("/import", status_code=201)
+def import_project(
+    body: dict,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Assemble uploaded files into one HTML page and create a ready project."""
+    raw_name = body.get("name")
+    if raw_name is not None and not isinstance(raw_name, str):
+        raise HTTPException(status_code=422, detail="'name' must be a string")
+    cleaned_name = "".join(ch for ch in (raw_name or "") if ord(ch) >= 32 and ord(ch) != 127).strip()
+    name = cleaned_name[:160] or "Imported App"
+
+    files = body.get("files")
+    if not isinstance(files, list) or not files:
+        raise HTTPException(status_code=422, detail="Please provide a non-empty 'files' list of {path, content} objects")
+    if len(files) > 80:
+        raise HTTPException(status_code=422, detail="Too many files — an import accepts at most 80 files")
+
+    for i, f in enumerate(files):
+        if not isinstance(f, dict):
+            raise HTTPException(status_code=422, detail=f"files[{i}] must be an object with 'path' and 'content'")
+        path = f.get("path")
+        content = f.get("content")
+        if not isinstance(path, str) or not path.strip():
+            raise HTTPException(status_code=422, detail=f"files[{i}]: 'path' must be a non-empty string")
+        if len(path) > 256:
+            raise HTTPException(status_code=422, detail=f"files[{i}]: 'path' is too long (max 256 characters)")
+        if not isinstance(content, str):
+            raise HTTPException(status_code=422, detail=f"files[{i}]: 'content' must be a string")
+        if len(content) > 400_000:
+            raise HTTPException(status_code=422, detail=f"files[{i}] ('{path}') is too large — max 400,000 characters each")
+
+    if sum(len(f["content"]) for f in files) > 2_000_000:
+        raise HTTPException(status_code=422, detail="Import is too large — the combined file content must stay under 2,000,000 characters")
+
+    html, _ = _assemble_imported_html(files, name=name)
+
+    all_paths = [f["path"] for f in files]
+    shown = all_paths[:12]
+    project = Project(
+        user_id=user.id,
+        name=name,
+        description=f"Imported {len(files)} file(s)",
+        original_prompt="Imported existing files: " + ", ".join(shown) + ("…" if len(all_paths) > 12 else ""),
+        html=html,
+        status="ready",
+        version=1,
+        error=None,
+    )
+    db.add(project)
+    db.flush()
+    db.add(
+        Message(
+            project_id=project.id,
+            role="assistant",
+            content=(
+                f"Imported {len(files)} file(s): {', '.join(all_paths[:8])}"
+                + ("…" if len(all_paths) > 8 else "")
+                + ". Your app is ready — preview it or ask me to change anything."
+            ),
+        )
+    )
+    db.add(ProjectVersion(project_id=project.id, version=1, html=html, label="Imported files"))
+    db.commit()
+    db.refresh(project)
     return _detail(db, project)
 
 

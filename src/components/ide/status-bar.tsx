@@ -1,39 +1,56 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { GitBranch } from "lucide-react";
+import { Bell as BellIcon, GitBranch, Rocket, XCircle, AlertTriangle } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
 /**
- * VS Code-style status bar — the signature bottom strip of the IDE shell.
- * Flat onyx surface, mono micro-type, one gold "main" chip on the left
- * (the only accent, per MONOLITH).
+ * The VS Code status bar — 22px strip on #181818, one gold "main" chip on
+ * the left (the MONOLITH accent standing in for VS Code's blue remote
+ * chip), quiet mono segments left and right.
  */
 export function StatusBar({
   left,
   right,
   className,
+  onOpenProblems,
 }: {
   left?: ReactNode;
   right?: ReactNode;
   className?: string;
+  onOpenProblems?: () => void;
 }) {
   return (
     <footer
       className={cn(
-        "flex h-6 shrink-0 select-none items-center justify-between gap-3 border-t border-white/[0.06] bg-[oklch(0.145_0_0)] px-1.5 font-mono text-[10.5px] leading-none text-zinc-400",
+        "flex h-[22px] shrink-0 select-none items-center justify-between gap-3 border-t border-[#2b2b2b] bg-[#181818] text-[11.5px] leading-none text-zinc-400",
         className
       )}
       role="contentinfo"
       aria-label="Status bar"
     >
       <div className="flex h-full min-w-0 items-center">
-        {/* remote/branch indicator — the accent chip */}
-        <span className="flex h-full items-center gap-1 bg-gold px-2 font-semibold text-black">
+        {/* branch indicator — the one accent chip */}
+        <span className="flex h-full items-center gap-1.5 bg-gold px-2.5 font-medium text-black">
           <GitBranch className="size-3" aria-hidden="true" />
           main
         </span>
+        {onOpenProblems ? (
+          <button
+            type="button"
+            onClick={onOpenProblems}
+            title="Problems"
+            className="flex h-full items-center gap-2.5 px-2.5 transition-colors hover:bg-white/[0.07] hover:text-zinc-200"
+          >
+            <span className="flex items-center gap-1">
+              <XCircle className="size-3" aria-hidden="true" />0
+            </span>
+            <span className="flex items-center gap-1">
+              <AlertTriangle className="size-3" aria-hidden="true" />0
+            </span>
+          </button>
+        ) : null}
         <div className="flex h-full min-w-0 items-center">{left}</div>
       </div>
       <div className="flex h-full items-center">{right}</div>
@@ -46,15 +63,23 @@ export function StatusSegment({
   children,
   pulse = false,
   className,
+  onClick,
+  title,
 }: {
   children: ReactNode;
   pulse?: boolean;
   className?: string;
+  onClick?: () => void;
+  title?: string;
 }) {
+  const Tag = onClick ? "button" : "span";
   return (
-    <span
+    <Tag
+      onClick={onClick}
+      title={title}
       className={cn(
-        "flex h-full items-center gap-1.5 px-2.5 whitespace-nowrap",
+        "flex h-full items-center gap-1.5 whitespace-nowrap px-2.5",
+        onClick && "transition-colors hover:bg-white/[0.07] hover:text-zinc-200",
         className
       )}
     >
@@ -62,6 +87,45 @@ export function StatusSegment({
         <span className="size-1.5 animate-pulse rounded-full bg-gold" aria-hidden="true" />
       ) : null}
       {children}
-    </span>
+    </Tag>
+  );
+}
+
+/** Right-side helper segments used by both pages. */
+export function LnCol() {
+  return <StatusSegment title="Cursor position">Ln 1, Col 1</StatusSegment>;
+}
+
+export function Encoding() {
+  return (
+    <>
+      <StatusSegment className="hidden sm:flex" title="Indentation">
+        Spaces: 2
+      </StatusSegment>
+      <StatusSegment className="hidden md:flex" title="Encoding">
+        UTF-8
+      </StatusSegment>
+      <StatusSegment className="hidden md:flex" title="Line endings">
+        LF
+      </StatusSegment>
+    </>
+  );
+}
+
+export function GoLive({ onClick, live }: { onClick?: () => void; live?: boolean }) {
+  if (!onClick) return null;
+  return (
+    <StatusSegment onClick={onClick} title={live ? "View live app" : "Publish and go live"}>
+      <Rocket className="size-3" aria-hidden="true" />
+      Go Live
+    </StatusSegment>
+  );
+}
+
+export function Bell() {
+  return (
+    <StatusSegment title="Notifications">
+      <BellIcon className="size-3" aria-hidden="true" />
+    </StatusSegment>
   );
 }

@@ -122,6 +122,10 @@ export function createProject(prompt: string) {
   return request<ProjectDetail>("/projects", { method: "POST", body: { prompt } });
 }
 
+export function importProject(body: { name: string; files: { path: string; content: string }[] }) {
+  return request<ProjectDetail>("/projects/import", { method: "POST", body });
+}
+
 export function getProject(id: string) {
   return request<ProjectDetail>(`/projects/${id}`);
 }

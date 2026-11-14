@@ -1,20 +1,27 @@
 "use client";
 
+/**
+ * The builder Explorer — a real VS Code tree: project root with chevron,
+ * the generated files (index.html / styles.css / app.js / README.md),
+ * then Outline and Timeline sections at the bottom like the real IDE.
+ */
+
+import { useState } from "react";
 import { formatDistanceToNow, isValid } from "date-fns";
 import {
   Check,
+  ChevronDown,
+  ChevronRight,
   Download,
-  FileCode2,
+  FileText,
   FolderOpen,
-  GitCompareArrows,
   Globe,
   History,
-  Monitor,
+  ListTree,
   MoreHorizontal,
   Pencil,
-  RotateCcw,
   Rocket,
-  type LucideIcon,
+  RotateCcw,
 } from "lucide-react";
 
 import {
@@ -24,7 +31,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { ViewHeader, ViewRow } from "@/components/ide/views";
+import { FileIcon } from "@/components/ide/editor-chrome";
 import { displayContent } from "@/components/builder/chat-panel";
+import type { VFile } from "@/lib/project-files";
 import type { ProjectDetail } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -36,19 +46,17 @@ function relative(iso: string | null): string {
   return isValid(d) ? formatDistanceToNow(d, { addSuffix: true }) : "";
 }
 
-/**
- * VS Code explorer for a project workspace — the app as a folder:
- * editor files (preview / index.html / diff), the full version history
- * (click to compare, hover to restore) and app actions on the root row.
- */
 export function BuilderExplorer({
   project,
+  files,
   activeTab,
+  activeFile,
   diffTo,
   restoringVersion,
   generating,
   publishing,
   onOpenTab,
+  onOpenFile,
   onOpenDiff,
   onRestore,
   onRename,
@@ -56,195 +64,205 @@ export function BuilderExplorer({
   onDownload,
 }: {
   project: ProjectDetail;
+  files: VFile[];
   activeTab: BuilderExplorerTab;
-  /** Version currently opened in the diff "compare" slot (for the row mark). */
+  /** Which generated file is open in the editor ("" when preview/diff). */
+  activeFile: string;
   diffTo: number | null;
   restoringVersion: number | null;
   generating: boolean;
   publishing: boolean;
   onOpenTab: (tab: BuilderExplorerTab) => void;
+  onOpenFile: (path: string) => void;
   onOpenDiff: (from: number | null, to: number) => void;
   onRestore: (version: number) => void;
   onRename: () => void;
   onPublish: () => void;
   onDownload: () => void;
 }) {
-  const files: { id: BuilderExplorerTab; label: string; icon: LucideIcon }[] = [
-    { id: "preview", label: "preview", icon: Monitor },
-    { id: "code", label: "index.html", icon: FileCode2 },
-    { id: "diff", label: "versions.diff", icon: GitCompareArrows },
-  ];
+  const [rootOpen, setRootOpen] = useState(true);
+  const [timelineOpen, setTimelineOpen] = useState(true);
 
   const versions = [...project.versions].sort((a, b) => b.version - a.version);
-  const lastMsg = project.messages[project.messages.length - 1];
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col pb-4 text-[13px]">
-      {/* section caption */}
-      <div className="flex h-8 shrink-0 items-center justify-between px-4">
-        <span className="font-mono text-[10px] font-medium uppercase tracking-[0.18em] text-zinc-500">
-          Explorer
-        </span>
-      </div>
-
-      {/* ------------------------------ project root ------------------------------ */}
-      <div className="group mx-2 mb-1 flex h-7 items-center gap-1.5 rounded-md pl-1 pr-1 transition-colors hover:bg-white/[0.05]">
-        <FolderOpen className="size-4 shrink-0 text-gold" aria-hidden="true" />
-        <span className="min-w-0 flex-1 truncate text-[12.5px] font-medium text-zinc-200" title={project.name}>
-          {project.name}
-        </span>
-        <span className="shrink-0 rounded border border-white/10 bg-white/[0.04] px-1 font-mono text-[9px] text-zinc-400">
-          v{project.version}
-        </span>
-
-        <div className="flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
+    <div className="flex min-h-0 flex-1 flex-col pb-3">
+      <ViewHeader
+        title="Explorer"
+        actions={
           <button
             type="button"
-            aria-label="Rename app"
-            title="Rename"
-            disabled={generating}
+            aria-label="More explorer actions"
+            title="More actions"
             onClick={onRename}
-            className="inline-flex size-5 items-center justify-center rounded text-muted-foreground hover:bg-white/[0.08] hover:text-foreground disabled:opacity-40"
+            className="inline-flex size-6 items-center justify-center rounded text-zinc-400 transition-colors hover:bg-white/[0.08] hover:text-zinc-100"
           >
-            <Pencil className="size-3" />
+            <MoreHorizontal className="size-4" aria-hidden="true" />
           </button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button
-                type="button"
-                aria-label="App actions"
-                className="inline-flex size-5 items-center justify-center rounded text-muted-foreground hover:bg-white/[0.08] hover:text-foreground"
-              >
-                <MoreHorizontal className="size-3.5" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-48">
-              {project.published_slug ? (
-                <DropdownMenuItem asChild>
-                  <a
-                    href={`/p/${project.published_slug}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <Globe />
-                    View live app
-                  </a>
-                </DropdownMenuItem>
-              ) : (
-                <DropdownMenuItem disabled={generating || publishing} onClick={onPublish}>
-                  <Rocket />
-                  {publishing ? "Publishing…" : "Publish app"}
-                </DropdownMenuItem>
-              )}
-              <DropdownMenuItem disabled={!project.html} onClick={onDownload}>
-                <Download />
-                Download HTML
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={onRename}>
-                <Pencil />
-                Rename
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </div>
+        }
+      />
 
-      {/* ------------------------------ editor files ------------------------------ */}
-      <Section title="Open editors">
-        <ul role="tree" aria-label="Editor files">
+      {/* project root row */}
+      <button
+        type="button"
+        onClick={() => setRootOpen((v) => !v)}
+        aria-expanded={rootOpen}
+        className="group flex h-[22px] w-full items-center gap-1 pl-2 pr-3 text-left text-[13px] font-semibold text-zinc-200 outline-none transition-colors hover:bg-white/[0.04]"
+      >
+        {rootOpen ? (
+          <ChevronDown className="size-4 shrink-0 text-zinc-500" aria-hidden="true" />
+        ) : (
+          <ChevronRight className="size-4 shrink-0 text-zinc-500" aria-hidden="true" />
+        )}
+        <FolderOpen className="size-4 shrink-0 text-gold" aria-hidden="true" />
+        <span className="min-w-0 flex-1 truncate" title={project.name}>
+          {project.name}
+        </span>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <span
+              role="button"
+              tabIndex={0}
+              aria-label="App actions"
+              onClick={(e) => e.stopPropagation()}
+              onKeyDown={(e) => e.stopPropagation()}
+              className="inline-flex size-5 items-center justify-center rounded text-zinc-400 opacity-0 transition-opacity hover:bg-white/[0.08] hover:text-zinc-100 focus-visible:opacity-100 group-hover:opacity-100"
+            >
+              <MoreHorizontal className="size-3.5" aria-hidden="true" />
+            </span>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-52 border-[#454545] bg-[#1f1f1f] text-zinc-200">
+            {project.published_slug ? (
+              <DropdownMenuItem
+                asChild
+                className="gap-2 text-[12.5px] data-[highlighted]:bg-white/[0.08]"
+              >
+                <a href={`/p/${project.published_slug}`} target="_blank" rel="noopener noreferrer">
+                  <Globe className="size-3.5" /> View live app
+                </a>
+              </DropdownMenuItem>
+            ) : (
+              <DropdownMenuItem
+                disabled={generating || publishing}
+                onSelect={onPublish}
+                className="gap-2 text-[12.5px] data-[highlighted]:bg-white/[0.08]"
+              >
+                <Rocket className="size-3.5" />
+                {publishing ? "Publishing…" : "Publish app"}
+              </DropdownMenuItem>
+            )}
+            <DropdownMenuItem
+              disabled={!project.html}
+              onSelect={onDownload}
+              className="gap-2 text-[12.5px] data-[highlighted]:bg-white/[0.08]"
+            >
+              <Download className="size-3.5" /> Download HTML
+            </DropdownMenuItem>
+            <DropdownMenuSeparator className="bg-white/[0.08]" />
+            <DropdownMenuItem
+              onSelect={onRename}
+              className="gap-2 text-[12.5px] data-[highlighted]:bg-white/[0.08]"
+            >
+              <Pencil className="size-3.5" /> Rename
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </button>
+
+      {/* file tree */}
+      {rootOpen ? (
+        <div role="tree" aria-label="Workspace files" className="mt-px">
           {files.map((f) => {
-            const active = activeTab === f.id;
+            const active = activeTab === "code" && activeFile === f.path;
             return (
-              <li key={f.id} role="treeitem" aria-selected={active}>
-                <button
-                  type="button"
-                  onClick={() => onOpenTab(f.id)}
-                  aria-current={active ? "true" : undefined}
-                  className={cn(
-                    "row relative mx-2 my-px flex h-7 w-[calc(100%-1rem)] items-center gap-1.5 rounded-md px-1.5 pl-2 text-left transition-colors",
-                    active
-                      ? "bg-white/[0.07] text-foreground"
-                      : "text-zinc-400 hover:bg-white/[0.05] hover:text-foreground"
-                  )}
-                >
-                  {active ? (
-                    <span
-                      aria-hidden="true"
-                      className="absolute left-0 top-1/2 h-3.5 w-0.5 -translate-y-1/2 rounded-full bg-gold"
-                    />
-                  ) : null}
-                  <f.icon
-                    className={cn(
-                      "size-3.5 shrink-0",
-                      active ? "text-gold" : "text-zinc-500"
-                    )}
-                    aria-hidden="true"
-                  />
-                  <span className="truncate text-[12.5px]">{f.label}</span>
-                  {f.id === "diff" && project.versions.length < 2 ? (
-                    <span className="ml-auto shrink-0 font-mono text-[9px] text-zinc-600">
-                      soon
-                    </span>
-                  ) : null}
-                </button>
-              </li>
+              <ViewRow
+                key={f.path}
+                indent={1}
+                active={active}
+                title={f.path}
+                onClick={() => onOpenFile(f.path)}
+              >
+                <FileIcon lang={f.lang} />
+                <span className="truncate">{f.label}</span>
+                {f.path === "index.html" && project.html ? null : null}
+              </ViewRow>
             );
           })}
-        </ul>
-      </Section>
+          {/* preview + diff as editor surfaces, like VS Code's simple browser */}
+          <ViewRow indent={1} active={activeTab === "preview"} onClick={() => onOpenTab("preview")}>
+            <FileText className="size-3.5 shrink-0 text-[#29B8DB]" aria-hidden="true" />
+            <span className="truncate">Live Preview</span>
+          </ViewRow>
+          <ViewRow
+            indent={1}
+            active={activeTab === "diff"}
+            onClick={() => onOpenDiff(null, project.version)}
+            title="versions.diff"
+          >
+            <FileIcon lang="diff" />
+            <span className="truncate">versions.diff</span>
+            {project.versions.length < 2 ? (
+              <span className="ml-auto shrink-0 font-mono text-[9px] text-zinc-600">soon</span>
+            ) : null}
+          </ViewRow>
+        </div>
+      ) : null}
 
-      {/* ----------------------------- version history ----------------------------- */}
-      <Section title="Version history">
-        {versions.length === 0 ? (
-          <p className="px-4 py-1.5 text-[11px] text-zinc-600">
-            Versions appear after each build.
-          </p>
+      {/* outline (decorative section like the real explorer) */}
+      <button
+        type="button"
+        onClick={() => setRootOpen((v) => !v)}
+        aria-expanded={rootOpen}
+        className="mt-1 flex h-[22px] w-full items-center gap-1 pl-2 pr-3 text-left text-[11px] font-semibold uppercase tracking-[0.06em] text-zinc-500 outline-none transition-colors hover:text-zinc-300"
+      >
+        <ListTree className="size-3.5 text-zinc-500" aria-hidden="true" />
+        Outline
+      </button>
+
+      {/* timeline = version history */}
+      <button
+        type="button"
+        onClick={() => setTimelineOpen((v) => !v)}
+        aria-expanded={timelineOpen}
+        className="mt-1.5 flex h-[22px] w-full items-center gap-1 pl-2 pr-3 text-left text-[11px] font-semibold uppercase tracking-[0.06em] text-zinc-500 outline-none transition-colors hover:text-zinc-300"
+      >
+        {timelineOpen ? (
+          <ChevronDown className="size-3.5 text-zinc-500" aria-hidden="true" />
         ) : (
-          <ul aria-label="Version history">
-            {versions.map((v, idx) => {
+          <ChevronRight className="size-3.5 text-zinc-500" aria-hidden="true" />
+        )}
+        <History className="size-3.5 text-zinc-500" aria-hidden="true" />
+        Timeline
+      </button>
+      {timelineOpen ? (
+        <div role="list" aria-label="Version timeline">
+          {versions.length === 0 ? (
+            <p className="px-4 py-1.5 text-[11px] text-zinc-600">
+              Versions appear after each build.
+            </p>
+          ) : (
+            versions.map((v, idx) => {
               const current = v.version === project.version;
-              const comparing = diffTo === v.version;
               return (
-                <li key={v.id} className="group/v relative">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      /* Compare against the previous version; the oldest
-                         falls back to the next newer one so a diff always
-                         has two distinct sides. */
-                      if (idx + 1 < versions.length) {
-                        onOpenDiff(versions[idx + 1].version, v.version);
-                      } else if (idx > 0) {
-                        onOpenDiff(v.version, versions[idx - 1].version);
-                      }
-                    }}
+                <div key={v.id} className="group/v relative">
+                  <ViewRow
+                    indent={1}
                     title={`Compare v${v.version} with the adjacent version`}
-                    className={cn(
-                      "row mx-2 my-px flex h-7 w-[calc(100%-1rem)] items-center gap-1.5 rounded-md pl-1.5 pr-1 text-left transition-colors",
-                      comparing
-                        ? "bg-white/[0.07] text-foreground"
-                        : "text-zinc-400 hover:bg-white/[0.05] hover:text-foreground"
-                    )}
+                    onClick={() => {
+                      if (idx + 1 < versions.length) onOpenDiff(versions[idx + 1].version, v.version);
+                      else if (idx > 0) onOpenDiff(v.version, versions[idx - 1].version);
+                    }}
                   >
-                    <History
-                      className={cn(
-                        "size-3.5 shrink-0",
-                        current ? "text-gold" : "text-zinc-500"
-                      )}
-                      aria-hidden="true"
-                    />
-                    <span className="shrink-0 font-mono text-[10.5px]">
+                    <span className="shrink-0 font-mono text-[10.5px] text-zinc-500">
                       v{v.version}
                     </span>
                     <span className="min-w-0 flex-1 truncate text-[11.5px] text-zinc-500">
-                      {displayContent(v.label).slice(0, 30) || "build"}
+                      {displayContent(v.label).slice(0, 24) || "build"}
                     </span>
                     {current ? (
                       <Check className="size-3 shrink-0 text-gold" aria-hidden="true" />
                     ) : null}
-                  </button>
-                  {/* hover restore */}
+                  </ViewRow>
                   {!current && !generating ? (
                     <button
                       type="button"
@@ -252,20 +270,20 @@ export function BuilderExplorer({
                       title={`Restore v${v.version}`}
                       disabled={restoringVersion !== null}
                       onClick={() => onRestore(v.version)}
-                      className="absolute right-3 top-1/2 hidden size-5 -translate-y-1/2 items-center justify-center rounded text-muted-foreground hover:bg-white/[0.08] hover:text-foreground disabled:opacity-40 group-hover/v:inline-flex"
+                      className="absolute right-2 top-1/2 hidden size-5 -translate-y-1/2 items-center justify-center rounded text-zinc-400 hover:bg-white/[0.08] hover:text-zinc-100 disabled:opacity-40 group-hover/v:inline-flex"
                     >
                       <RotateCcw className="size-3" />
                     </button>
                   ) : null}
-                </li>
+                </div>
               );
-            })}
-          </ul>
-        )}
-      </Section>
+            })
+          )}
+        </div>
+      ) : null}
 
-      {/* -------------------------------- app meta -------------------------------- */}
-      <div className="mt-auto space-y-1 px-4 pt-4 font-mono text-[10px] uppercase tracking-[0.16em] text-zinc-600">
+      {/* workspace meta footer */}
+      <div className="mt-auto space-y-0.5 px-4 pt-3 font-mono text-[10px] uppercase tracking-[0.14em] text-zinc-600">
         <p>
           status:{" "}
           <span
@@ -276,40 +294,8 @@ export function BuilderExplorer({
             {generating ? "building" : project.status}
           </span>
         </p>
-        <p>{project.messages.length} messages</p>
-        <p>created {relative(project.created_at) || "recently"}</p>
+        <p>{project.messages.length} messages · {relative(project.updated_at || project.created_at)}</p>
       </div>
-
-      {/* last exchange preview */}
-      {lastMsg ? (
-        <p className="mt-2 line-clamp-2 px-4 text-[11px] normal-case leading-snug text-zinc-600" title={displayContent(lastMsg.content)}>
-          <span className="text-zinc-500">{lastMsg.role === "user" ? "you: " : "z.ai: "}</span>
-          {displayContent(lastMsg.content)}
-        </p>
-      ) : null}
     </div>
-  );
-}
-
-/** Collapsible explorer section with VS Code chevron. */
-function Section({
-  title,
-  open = true,
-  children,
-}: {
-  title: string;
-  open?: boolean;
-  children: React.ReactNode;
-}) {
-  if (!open) return null;
-  return (
-    <section className="mb-1">
-      <div className="flex h-7 items-center px-2">
-        <span className="truncate font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-zinc-400">
-          {title}
-        </span>
-      </div>
-      <div className="pb-1">{children}</div>
-    </section>
   );
 }

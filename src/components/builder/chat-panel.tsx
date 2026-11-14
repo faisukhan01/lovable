@@ -28,7 +28,7 @@ import { toast } from "sonner";
 export type ChatMode = "build" | "ask";
 
 /** One-tap directives (Build mode). */
-const QUICK_ACTIONS: { icon: typeof Bandage; label: string; directive: string }[] = [
+export const QUICK_ACTIONS: { icon: typeof Bandage; label: string; directive: string }[] = [
   {
     icon: Bandage,
     label: "Fix errors",

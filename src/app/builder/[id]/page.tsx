@@ -4,7 +4,7 @@ import { use, useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
-  Code2,
+  Check,
   Copy,
   Download,
   FileQuestion,
@@ -22,13 +22,35 @@ import {
 import { toast } from "sonner";
 
 import { ChatPanel, displayContent, expandSlash, type ChatMode } from "@/components/builder/chat-panel";
-import { StatusBar, StatusSegment } from "@/components/ide/status-bar";
+import { CreateProjectDialog } from "@/components/dashboard/create-project-dialog";
+import {
+  Breadcrumbs,
+  CodeEditor,
+  EmptyEditor,
+  FileIcon,
+  IdeTab,
+} from "@/components/ide/editor-chrome";
 import { BuilderExplorer, type BuilderExplorerTab } from "@/components/ide/builder-explorer";
+import { ChatDock } from "@/components/ide/chat-dock";
 import { IdeShell, IdeShellSkeleton } from "@/components/ide/ide-shell";
+import { useImporters } from "@/components/ide/import-controls";
+import {
+  CodeSearchView,
+  DebugView,
+  ExtensionsView,
+  ScmView,
+} from "@/components/ide/views";
+import { OutputView, TerminalView, type PanelTab } from "@/components/ide/panel-bottom";
+import {
+  Bell,
+  Encoding,
+  GoLive,
+  LnCol,
+  StatusSegment,
+} from "@/components/ide/status-bar";
 import { DiffView } from "@/components/builder/diff-view";
 import {
   PreviewPanel,
-  type BuilderTab,
   type DeviceMode,
 } from "@/components/builder/preview-panel";
 import { useMinWidth } from "@/components/builder/use-min-width";
@@ -41,12 +63,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -67,73 +83,14 @@ import {
   renameProject,
   restoreVersion,
 } from "@/lib/api";
+import { languageLabel, splitProjectFiles } from "@/lib/project-files";
 import type { MessageT, ProjectDetail } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 type LoadError = { status: number; message: string };
 
-function SegBtn({
-  active,
-  onClick,
-  label,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  label: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={active}
-      aria-label={label}
-      title={label}
-      className={cn(
-        "inline-flex h-7 items-center justify-center gap-1.5 rounded-md px-2.5 text-xs font-medium transition-colors",
-        active
-          ? "bg-white/10 text-foreground shadow-sm"
-          : "text-muted-foreground hover:text-foreground"
-      )}
-    >
-      {children}
-    </button>
-  );
-}
-
-/** A VS Code editor tab — flat strip, gold top edge on the active tab. */
-function IdeTab({
-  active,
-  onClick,
-  icon,
-  label,
-}: {
-  active: boolean;
-  onClick: () => void;
-  icon: React.ReactNode;
-  label: string;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      role="tab"
-      aria-selected={active}
-      className={cn(
-        "flex shrink-0 items-center gap-1.5 border-r border-white/[0.06] border-t-2 px-3 text-xs transition-colors",
-        active
-          ? "border-t-gold bg-background text-foreground"
-          : "border-t-transparent text-muted-foreground hover:bg-white/[0.03] hover:text-foreground"
-      )}
-    >
-      <span className={active ? "text-gold" : "text-zinc-500"} aria-hidden="true">
-        {icon}
-      </span>
-      <span className="whitespace-nowrap">{label}</span>
-    </button>
-  );
-}
+const PREVIEW_TAB = "preview";
+const DIFF_TAB = "diff";
 
 export default function BuilderPage({
   params,
@@ -157,7 +114,9 @@ export default function BuilderPage({
   const [renameValue, setRenameValue] = useState("");
   const [renaming, setRenaming] = useState(false);
 
-  const [tab, setTab] = useState<BuilderTab>("preview");
+  /* Editor state — open tabs are ids: "preview" | "diff" | file path. */
+  const [openTabs, setOpenTabs] = useState<string[]>([PREVIEW_TAB]);
+  const [activeTab, setActiveTab] = useState<string>(PREVIEW_TAB);
   const [device, setDevice] = useState<DeviceMode>("desktop");
   const [mobileTab, setMobileTab] = useState<"chat" | "preview">("preview");
   const [previewKey, setPreviewKey] = useState(0);
@@ -174,6 +133,12 @@ export default function BuilderPage({
   const [diffBefore, setDiffBefore] = useState("");
   const [diffAfter, setDiffAfter] = useState("");
   const [diffLoading, setDiffLoading] = useState(false);
+
+  /* Bottom panel tab + copied flag for the code action strip */
+  const [panelTab, setPanelTab] = useState<PanelTab>("terminal");
+  const [copied, setCopied] = useState(false);
+  const importers = useImporters();
+  const [createOpen, setCreateOpen] = useState(false);
 
   const isDesktop = useMinWidth(1024);
   const generating = project?.status === "generating";
@@ -227,6 +192,34 @@ export default function BuilderPage({
   }, [id, project?.status]);
 
   /* ------------------------------ Derived data ------------------------------ */
+  const files = useMemo(
+    () =>
+      splitProjectFiles(
+        project?.html ?? null,
+        project?.name ?? "app",
+        project?.original_prompt ?? ""
+      ),
+    [project?.html, project?.name, project?.original_prompt]
+  );
+
+  const activeFile = useMemo(
+    () => files.find((f) => f.path === activeTab) ?? null,
+    [files, activeTab]
+  );
+
+  /* Keep the active tab valid when the file set changes after a rebuild. */
+  useEffect(() => {
+    setOpenTabs((tabs) => {
+      const next = tabs.filter((t) => t === PREVIEW_TAB || t === DIFF_TAB || files.some((f) => f.path === t));
+      return next.length ? next : [PREVIEW_TAB];
+    });
+    setActiveTab((t) =>
+      t === PREVIEW_TAB || t === DIFF_TAB || files.some((f) => f.path === t)
+        ? t
+        : PREVIEW_TAB
+    );
+  }, [files]);
+
   const visibleMessages = useMemo(() => {
     if (!project) return [];
     const out = [...project.messages];
@@ -239,6 +232,39 @@ export default function BuilderPage({
     return out;
   }, [project, optimistic]);
 
+  const lastAssistant = useMemo(
+    () => [...visibleMessages].reverse().find((m) => m.role === "assistant"),
+    [visibleMessages]
+  );
+
+  /* Output log from the conversation (safe before the early returns). */
+  const outputLines = useMemo(() => {
+    const lines: { kind: "info" | "ok" | "warn" | "error" | "cmd"; text: string }[] = [];
+    if (!project) return lines;
+    lines.push({ kind: "info", text: `[lovify] workspace "${project.name}" opened` });
+    lines.push({
+      kind: "info",
+      text: `[lovify] brief: ${project.original_prompt.slice(0, 90)}${project.original_prompt.length > 90 ? "…" : ""}`,
+    });
+    for (const m of project.messages) {
+      if (m.role === "user") {
+        lines.push({ kind: "cmd", text: `[you] ${displayContent(m.content).slice(0, 110)}` });
+      } else {
+        lines.push({
+          kind: "ok",
+          text: `[z.ai] ${displayContent(m.content).slice(0, 110).replace(/\n/g, " ")}`,
+        });
+      }
+    }
+    if (project.status === "generating") {
+      lines.push({ kind: "warn", text: `[lovify] building v${project.version + 1} with Z.AI…` });
+    }
+    if (project.status === "error" && project.error) {
+      lines.push({ kind: "error", text: `[lovify] ${project.error}` });
+    }
+    return lines;
+  }, [project]);
+
   const publishFullUrl = useMemo(() => {
     if (!publishUrl) return "";
     if (/^https?:\/\//i.test(publishUrl)) return publishUrl;
@@ -246,10 +272,46 @@ export default function BuilderPage({
     return `${origin}${publishUrl}`;
   }, [publishUrl]);
 
+  /* -------------------------------- Tab helpers ------------------------------ */
+  const openTab = useCallback((tabId: string) => {
+    setOpenTabs((tabs) => (tabs.includes(tabId) ? tabs : [...tabs, tabId]));
+    setActiveTab(tabId);
+    if (window.matchMedia("(max-width: 1023px)").matches) setMobileTab("preview");
+  }, []);
+
+  const openDiff = useCallback(
+    (from: number | null, to: number) => {
+      setDiffFrom(from);
+      setDiffTo(to);
+      openTab(DIFF_TAB);
+    },
+    [openTab]
+  );
+
+  const closeTab = useCallback((tabId: string) => {
+    setOpenTabs((tabs) => {
+      const next = tabs.filter((t) => t !== tabId);
+      if (!next.includes(PREVIEW_TAB)) next.push(PREVIEW_TAB);
+      return next;
+    });
+    setActiveTab((cur) => (cur === tabId ? PREVIEW_TAB : cur));
+  }, []);
+
+  const onExplorerTab = useCallback(
+    (t: BuilderExplorerTab) => {
+      if (t === "code") {
+        openTab(files[0]?.path ?? PREVIEW_TAB);
+      } else {
+        openTab(t);
+      }
+    },
+    [files, openTab]
+  );
+
   /* Shared version picker for the Diff tab */
   const diffSelector = (
-    <div className="flex flex-wrap items-center gap-2 border-b border-white/[0.06] px-4 py-2.5">
-      <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+    <div className="flex flex-wrap items-center gap-2 border-b border-[#2b2b2b] bg-[#181818] px-4 py-2">
+      <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-500">
         Compare
       </span>
       <Select
@@ -494,11 +556,23 @@ export default function BuilderPage({
     }
   }
 
+  async function copyActiveFile() {
+    if (!activeFile) return;
+    try {
+      await navigator.clipboard.writeText(activeFile.content);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1800);
+      toast.success(`Copied ${activeFile.label}`);
+    } catch {
+      toast.error("Could not copy the code");
+    }
+  }
+
   /* Load the two selected versions' HTML when the diff tab is active —
      and whenever the compare pickers (or explorer rows) change. */
   const versionsKey = project?.versions.map((v) => v.version).join(",") ?? "";
   useEffect(() => {
-    if (tab !== "diff" || !versionsKey) return;
+    if (activeTab !== DIFF_TAB || !versionsKey) return;
     const nums = versionsKey.split(",").map(Number);
     const to = diffTo ?? nums[0];
     const from = diffFrom ?? nums[1] ?? nums[0];
@@ -525,7 +599,7 @@ export default function BuilderPage({
     return () => {
       cancelled = true;
     };
-  }, [tab, versionsKey, diffFrom, diffTo]);
+  }, [activeTab, versionsKey, diffFrom, diffTo]);
 
   /* --------------------------------- Screens -------------------------------- */
   if (loadingInitial) {
@@ -601,21 +675,19 @@ export default function BuilderPage({
   const explorer = (
     <BuilderExplorer
       project={project}
-      activeTab={tab}
+      files={files}
+      activeTab={activeTab === DIFF_TAB ? "diff" : activeTab === PREVIEW_TAB ? "preview" : "code"}
+      activeFile={activeFile?.path ?? ""}
       diffTo={diffTo}
       restoringVersion={restoringVersion}
       generating={!!generating}
       publishing={publishing}
-      onOpenTab={(t: BuilderExplorerTab) => {
-        setTab(t);
-        if (!isDesktop) setMobileTab("preview");
+      onOpenTab={(t) => {
+        if (t === "code") openTab(files[0]?.path ?? PREVIEW_TAB);
+        else openTab(t);
       }}
-      onOpenDiff={(from, to) => {
-        setDiffFrom(from);
-        setDiffTo(to);
-        setTab("diff");
-        if (!isDesktop) setMobileTab("preview");
-      }}
+      onOpenFile={(path) => openTab(path)}
+      onOpenDiff={(from, to) => openDiff(from, to)}
       onRestore={(v) => void handleRestore(v)}
       onRename={() => {
         setRenameValue(project.name);
@@ -628,28 +700,24 @@ export default function BuilderPage({
 
   /* Title-bar action — Publish / View live */
   const titleActions = project.published_slug ? (
-    <Button
-      asChild
-      variant="outline"
-      size="sm"
-      className="h-6.5 gap-1.5 rounded-md px-2 text-xs"
+    <a
+      href={`/p/${project.published_slug}`}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label="View live app"
+      title="View live app"
+      className="inline-flex h-6.5 items-center gap-1.5 rounded-md border border-white/10 bg-white/[0.03] px-2 text-xs text-zinc-300 transition-colors hover:bg-white/[0.08]"
     >
-      <a
-        href={`/p/${project.published_slug}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        aria-label="View live app"
-      >
-        <Globe className="size-3.5" />
-        <span className="hidden sm:inline">Live</span>
-      </a>
-    </Button>
+      <Globe className="size-3.5" />
+      <span className="hidden sm:inline">Live</span>
+    </a>
   ) : (
-    <Button
-      size="sm"
+    <button
+      type="button"
       onClick={handlePublish}
       disabled={generating || publishing}
-      className="h-6.5 gap-1.5 rounded-md px-2.5 text-xs"
+      title="Publish this app"
+      className="inline-flex h-6.5 items-center gap-1.5 rounded-md bg-gold px-2.5 text-xs font-semibold text-black transition-opacity hover:opacity-90 disabled:opacity-40"
     >
       {publishing ? (
         <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
@@ -657,10 +725,10 @@ export default function BuilderPage({
         <Rocket className="size-3.5" aria-hidden="true" />
       )}
       <span className="hidden sm:inline">Publish</span>
-    </Button>
+    </button>
   );
 
-  /* Device picker — shown on the tab strip while previewing */
+  /* Editor action strip (right of the tab strip) */
   const devicePicker = (
     <div className="flex items-center gap-0.5 rounded-lg border border-white/10 bg-white/[0.03] p-0.5">
       <SegBtn active={device === "desktop"} onClick={() => setDevice("desktop")} label="Desktop preview">
@@ -675,43 +743,151 @@ export default function BuilderPage({
     </div>
   );
 
-  /* Editor content — shared by desktop editor column and mobile stack */
-  const editorContent = (
-    <PreviewPanel
-      project={project}
-      tab={tab}
-      device={device}
-      previewKey={previewKey}
-      generating={!!generating}
-      onRefresh={() => setPreviewKey((k) => k + 1)}
-      onDownload={handleDownload}
-      onExplain={() => void handleExplain()}
-    >
-      {tab === "diff" ? (
-        <div className="flex h-full flex-col">
-          {diffSelector}
-          <DiffView
-            before={diffBefore}
-            after={diffAfter}
-            loading={diffLoading}
-            className="min-h-0 flex-1"
+  const fileActions = activeFile ? (
+    <div className="flex items-center gap-0.5">
+      <button
+        type="button"
+        aria-label="Explain this code with Z.AI"
+        title="Explain this code (Z.AI)"
+        onClick={() => void handleExplain()}
+        className="inline-flex size-6 items-center justify-center rounded text-zinc-400 transition-colors hover:bg-white/[0.08] hover:text-zinc-100"
+      >
+        <Lightbulb className="size-3.5" aria-hidden="true" />
+      </button>
+      <button
+        type="button"
+        aria-label="Download the app HTML"
+        title="Download app (⌘S)"
+        onClick={handleDownload}
+        className="inline-flex size-6 items-center justify-center rounded text-zinc-400 transition-colors hover:bg-white/[0.08] hover:text-zinc-100"
+      >
+        <Download className="size-3.5" aria-hidden="true" />
+      </button>
+      <button
+        type="button"
+        aria-label="Copy file"
+        title="Copy file"
+        onClick={() => void copyActiveFile()}
+        className="inline-flex size-6 items-center justify-center rounded text-zinc-400 transition-colors hover:bg-white/[0.08] hover:text-zinc-100"
+      >
+        {copied ? (
+          <Check className="size-3.5 text-gold" aria-hidden="true" />
+        ) : (
+          <Copy className="size-3.5" aria-hidden="true" />
+        )}
+      </button>
+    </div>
+  ) : null;
+
+  /* Tab strip */
+  const tabStrip = (
+    <>
+      {openTabs.map((t) => {
+        if (t === PREVIEW_TAB) {
+          return (
+            <IdeTab
+              key={t}
+              active={activeTab === t}
+              onClick={() => setActiveTab(t)}
+              icon={<Monitor className="size-3.5 text-[#29B8DB]" aria-hidden="true" />}
+              label="Live Preview"
+            />
+          );
+        }
+        if (t === DIFF_TAB) {
+          return (
+            <IdeTab
+              key={t}
+              active={activeTab === t}
+              onClick={() => setActiveTab(t)}
+              onClose={() => closeTab(t)}
+              icon={<GitCompareArrows className="size-3.5 text-zinc-400" aria-hidden="true" />}
+              label="versions.diff"
+            />
+          );
+        }
+        const f = files.find((ff) => ff.path === t);
+        if (!f) return null;
+        return (
+          <IdeTab
+            key={t}
+            active={activeTab === t}
+            onClick={() => setActiveTab(t)}
+            onClose={() => closeTab(t)}
+            icon={<FileIcon lang={f.lang} />}
+            label={f.label}
           />
-        </div>
+        );
+      })}
+      {generating ? (
+        <span
+          className="flex items-center gap-1.5 self-center px-3 font-mono text-[9px] uppercase tracking-[0.16em] text-gold"
+          role="status"
+        >
+          <span className="size-1.5 animate-pulse rounded-full bg-gold" aria-hidden="true" />
+          building
+        </span>
       ) : null}
-    </PreviewPanel>
+    </>
   );
 
-  const chatPanel = (
-    <ChatPanel
-      project={project}
+  /* Breadcrumbs */
+  const breadcrumbTrail = (() => {
+    if (activeFile) {
+      return [
+        { label: project.name },
+        ...activeFile.path.split("/").map((part, i, arr) => ({
+          label: part,
+          lang: i === arr.length - 1 ? activeFile.lang : undefined,
+        })),
+      ];
+    }
+    if (activeTab === DIFF_TAB) {
+      return [{ label: project.name }, { label: "versions.diff", lang: "diff" as const }];
+    }
+    return [{ label: project.name }, { label: "Live Preview" }];
+  })();
+
+  /* Editor content — shared by desktop editor column and mobile stack */
+  const editorContent =
+    activeFile ? (
+      <CodeEditor file={activeFile} />
+    ) : activeTab === DIFF_TAB ? (
+      <div className="flex h-full flex-col">
+        {diffSelector}
+        <DiffView
+          before={diffBefore}
+          after={diffAfter}
+          loading={diffLoading}
+          className="min-h-0 flex-1"
+        />
+      </div>
+    ) : (
+      <PreviewPanel
+        project={project}
+        tab="preview"
+        device={device}
+        previewKey={previewKey}
+        generating={!!generating}
+        onRefresh={() => setPreviewKey((k) => k + 1)}
+        onDownload={handleDownload}
+        onExplain={() => void handleExplain()}
+      />
+    );
+
+  const chatDock = (
+    <ChatDock
+      projectName={project.name}
       messages={visibleMessages}
       generating={!!generating}
+      buildLabel={generating ? `building v${project.version + 1}` : null}
+      error={project.status === "error" ? project.error ?? "Unknown error" : null}
       sending={sending}
       asking={thinking}
       mode={mode}
       onModeChange={setMode}
       onSend={handleSend}
-      className="border-r-0 border-l border-white/[0.06]"
+      onClose={() => setChatOpen(false)}
     />
   );
 
@@ -724,7 +900,7 @@ export default function BuilderPage({
             ? "last build failed"
             : "ready"}
       </StatusSegment>
-      <StatusSegment>
+      <StatusSegment title="Version · messages" className="hidden sm:flex">
         v{project.version} · {project.messages.length} msg
       </StatusSegment>
     </>
@@ -732,78 +908,119 @@ export default function BuilderPage({
 
   const statusRight = (
     <>
-      {tab === "preview" ? (
-        <StatusSegment className="hidden sm:flex">{device} preview</StatusSegment>
-      ) : null}
-      <StatusSegment>{tab} view</StatusSegment>
-      <StatusSegment className="hidden sm:flex">
+      {activeFile ? (
+        <StatusSegment title="Language" className="hidden sm:flex">{languageLabel(activeFile.lang)}</StatusSegment>
+      ) : (
+        <StatusSegment title="View" className="hidden sm:flex">{activeTab === DIFF_TAB ? "Diff" : "Preview"}</StatusSegment>
+      )}
+      <LnCol />
+      <Encoding />
+      <GoLive
+        live={!!project.published_slug}
+        onClick={
+          project.published_slug
+            ? () => window.open(`/p/${project.published_slug}`, "_blank")
+            : () => void handlePublish()
+        }
+      />
+      <StatusSegment className="hidden sm:flex" title="AI backend">
         <span className="size-1.5 animate-pulse rounded-full bg-gold" aria-hidden="true" />
-        Z.AI connected
+        Z.AI
       </StatusSegment>
+      <Bell />
     </>
   );
+
+  /* Bottom panel */
+  const panel = {
+    tabs: ["problems", "output", "terminal"] as PanelTab[],
+    active: panelTab,
+    onActive: setPanelTab,
+    content:
+      panelTab === "problems" ? (
+        <div className="flex h-full items-center justify-center gap-2 px-4 text-xs text-zinc-500">
+          {project.status === "error" && project.error ? (
+            <span className="text-rose-300">✖ {project.error}</span>
+          ) : (
+            <span>No problems have been detected in the workspace.</span>
+          )}
+        </div>
+      ) : panelTab === "output" ? (
+        <OutputView lines={outputLines} />
+      ) : (
+        <TerminalView
+          intro={[`workspace: ${project.name} · v${project.version} · ${project.status}`]}
+          files={files.map((f) => f.path)}
+          statusLine={`v${project.version} · ${generating ? "building" : project.status} · Z.AI connected`}
+          onOpenPreview={() => openTab(PREVIEW_TAB)}
+        />
+      ),
+  };
+
+  const menu = {
+    onNewProject: () => setCreateOpen(true),
+    onImportFolder: importers.openFolder,
+    onImportFiles: importers.openFiles,
+    onDownload: handleDownload,
+    onPublish: project.published_slug
+      ? () => window.open(`/p/${project.published_slug}`, "_blank")
+      : () => void handlePublish(),
+    onOpenPreview: () => openTab(PREVIEW_TAB),
+    onRefreshPreview: () => setPreviewKey((k) => k + 1),
+    onCloseWorkspace: () => window.location.assign("/dashboard"),
+  };
 
   /* ------------------------------- Desktop IDE ------------------------------- */
   if (isDesktop) {
     return (
       <>
         <IdeShell
-          sidebar={explorer}
-          actions={titleActions}
-          mainClassName="overflow-hidden"
-          breadcrumb={
-            tab === "preview" ? (
-              devicePicker
-            ) : tab === "code" ? (
-              <span aria-hidden="true">
-                lovify <span className="text-zinc-700">/</span> {project.name}{" "}
-                <span className="text-zinc-700">/</span>{" "}
-                <span className="text-zinc-500">index.html</span>
-              </span>
-            ) : (
-              <span aria-hidden="true">
-                lovify <span className="text-zinc-700">/</span> {project.name}{" "}
-                <span className="text-zinc-700">/</span>{" "}
-                <span className="text-zinc-500">versions.diff</span>
-              </span>
-            )
-          }
-          statusLeft={statusLeft}
-          statusRight={statusRight}
-          chat={chatPanel}
-          chatOpen={chatOpen}
-          onToggleChat={() => setChatOpen((v) => !v)}
-          tabs={
+          title={project.name}
+          menu={menu}
+          actions={
             <>
-              <IdeTab
-                active={tab === "preview"}
-                onClick={() => setTab("preview")}
-                icon={<PanelTop className="size-3.5" />}
-                label="Preview"
-              />
-              <IdeTab
-                active={tab === "code"}
-                onClick={() => setTab("code")}
-                icon={<Code2 className="size-3.5" />}
-                label="index.html"
-              />
-              <IdeTab
-                active={tab === "diff"}
-                onClick={() => setTab("diff")}
-                icon={<GitCompareArrows className="size-3.5" />}
-                label="versions.diff"
-              />
-              {generating ? (
-                <span
-                  className="flex items-center gap-1.5 self-center px-3 font-mono text-[9px] uppercase tracking-[0.16em] text-gold"
-                  role="status"
-                >
-                  <span className="size-1.5 animate-pulse rounded-full bg-gold" aria-hidden="true" />
-                  building
-                </span>
-              ) : null}
+              {titleActions}
+              {importers.inputs}
             </>
           }
+          mainClassName="overflow-hidden"
+          badges={generating ? { explorer: 1 } : undefined}
+          views={{
+            explorer,
+            search: (
+              <CodeSearchView
+                files={files}
+                onOpenFile={(path) => openTab(path)}
+              />
+            ),
+            scm: (
+              <ScmView
+                versions={project.versions}
+                currentVersion={project.version}
+                generating={!!generating}
+                restoringVersion={restoringVersion}
+                onCompare={(from, to) => openDiff(from, to)}
+                onRestore={(v) => void handleRestore(v)}
+              />
+            ),
+            debug: (
+              <DebugView
+                generating={!!generating}
+                onRun={() => openTab(PREVIEW_TAB)}
+              />
+            ),
+            extensions: <ExtensionsView />,
+          }}
+          tabs={tabStrip}
+          tabActions={activeTab === PREVIEW_TAB ? devicePicker : fileActions}
+          breadcrumb={<Breadcrumbs trail={breadcrumbTrail} />}
+          statusLeft={statusLeft}
+          statusRight={statusRight}
+          panel={panel}
+          onOpenProblems={() => setPanelTab("problems")}
+          chat={chatDock}
+          chatOpen={chatOpen}
+          onToggleChat={() => setChatOpen((v) => !v)}
         >
           {editorContent}
         </IdeShell>
@@ -828,6 +1045,7 @@ export default function BuilderPage({
           url={publishFullUrl}
           onCopy={() => void copyPublishUrl()}
         />
+        <CreateProjectDialog open={createOpen} onOpenChange={setCreateOpen} />
       </>
     );
   }
@@ -836,11 +1054,20 @@ export default function BuilderPage({
   return (
     <>
       <IdeShell
-        sidebar={explorer}
-        actions={titleActions}
+        title={project.name}
+        menu={menu}
+        actions={
+          <>
+            {titleActions}
+            {importers.inputs}
+          </>
+        }
         mainClassName="overflow-hidden"
+        views={{ explorer }}
         statusLeft={statusLeft}
         statusRight={statusRight}
+        panel={panel}
+        onOpenProblems={() => setPanelTab("problems")}
         tabs={
           <div className="flex items-center gap-1 px-2">
             <SegBtn
@@ -899,7 +1126,38 @@ export default function BuilderPage({
         url={publishFullUrl}
         onCopy={() => void copyPublishUrl()}
       />
+      <CreateProjectDialog open={createOpen} onOpenChange={setCreateOpen} />
     </>
+  );
+}
+
+function SegBtn({
+  active,
+  onClick,
+  label,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      aria-label={label}
+      title={label}
+      className={cn(
+        "inline-flex h-7 items-center justify-center gap-1.5 rounded-md px-2.5 text-xs font-medium transition-colors",
+        active
+          ? "bg-white/10 text-foreground shadow-sm"
+          : "text-muted-foreground hover:text-foreground"
+      )}
+    >
+      {children}
+    </button>
   );
 }
 

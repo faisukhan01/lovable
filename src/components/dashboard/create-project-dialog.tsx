@@ -144,7 +144,7 @@ export function CreateProjectDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-xl">
+      <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto p-4 shadow-[0_48px_140px_-32px_rgba(0,0,0,0.95)] ring-1 ring-white/[0.08] sm:max-w-xl sm:p-6">
         <DialogHeader>
           <DialogTitle className="font-display text-2xl tracking-normal">
             Describe your app
@@ -158,7 +158,7 @@ export function CreateProjectDialog({
         <div className="space-y-3">
           <Textarea
             autoFocus
-            rows={5}
+            rows={4}
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             placeholder="A booking site for my studio with a calendar, pricing cards and a gallery…"
@@ -226,13 +226,13 @@ export function CreateProjectDialog({
                     key={ex.title}
                     type="button"
                     onClick={() => setPrompt(ex.prompt)}
-                    className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3 text-left transition-colors hover:border-gold/35"
+                    className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-2.5 text-left transition-colors hover:border-gold/35"
                   >
                     <span className="flex items-center gap-1.5">
                       <Icon className="size-3.5 shrink-0 text-gold" />
                       <span className="truncate text-xs font-medium">{ex.title}</span>
                     </span>
-                    <span className="mt-1 line-clamp-2 block text-[11px] leading-snug text-muted-foreground">
+                    <span className="mt-1 line-clamp-1 text-[11px] leading-snug text-muted-foreground">
                       {ex.prompt}
                     </span>
                   </button>

@@ -774,6 +774,8 @@ export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [inputFocused, setInputFocused] = useState(false);
   const [navHidden, setNavHidden] = useState(false);
+  const [nudgeOpen, setNudgeOpen] = useState(false);
+  const [nudgePrompt, setNudgePrompt] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const menuOpenRef = useRef(false);
   const prefersReduced = !!useReducedMotion();
@@ -825,19 +827,22 @@ export default function Home() {
     };
   }, []);
 
+  /* Stash the idea and raise the inline sign-in card under the chat line. */
+  const raiseSignInNudge = useCallback((value: string) => {
+    stashPendingPrompt(value);
+    setNudgePrompt(value);
+    setNudgeOpen(true);
+  }, []);
+
   const submitPrompt = useCallback(async () => {
     const value = prompt.trim();
     if (!value || creating) return;
     const currentToken = useAuthStore.getState().token;
     if (!currentToken) {
-      /* Keep the user on the landing page: notify them to sign in first.
-         The idea stays in the box AND is stashed — after sign-in the
-         dashboard opens with it pre-filled, ready to build. */
-      stashPendingPrompt(value);
-      toast("Sign in to start building", {
-        description: "Your idea is saved and will be waiting on your dashboard.",
-        action: { label: "Sign in", onClick: () => router.push("/auth") },
-      });
+      /* Keep the user on the landing page: an animated card unfolds right
+         under the chat line. The idea stays in the box AND is stashed —
+         after sign-in the dashboard opens with it pre-filled. */
+      raiseSignInNudge(value);
       return;
     }
     setCreating(true);
@@ -849,17 +854,13 @@ export default function Home() {
       if (e instanceof ApiError && e.status === 401) {
         /* Session died mid-idea — keep the prompt so the dashboard picks it
            up right after the user signs back in. */
-        stashPendingPrompt(value);
-        toast("Sign in to start building", {
-          description: "Your idea is saved and will be waiting on your dashboard.",
-          action: { label: "Sign in", onClick: () => router.push("/auth") },
-        });
+        raiseSignInNudge(value);
         return;
       }
       toast.error(e instanceof Error ? e.message : "Something went wrong");
       setCreating(false);
     }
-  }, [prompt, creating, router]);
+  }, [prompt, creating, router, raiseSignInNudge]);
 
   const fillPrompt = (value: string) => {
     setPrompt(value);
@@ -1103,6 +1104,113 @@ export default function Home() {
                   </div>
                 </div>
               </div>
+
+              {/* inline sign-in nudge — unfolds in the middle, under the chat line */}
+              <AnimatePresence>
+                {nudgeOpen && !authed ? (
+                  <motion.div
+                    key="signin-nudge"
+                    role="status"
+                    aria-live="polite"
+                    initial={{ opacity: 0, y: -14, scale: 0.955, filter: "blur(6px)" }}
+                    animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+                    exit={{ opacity: 0, y: -8, scale: 0.97, filter: "blur(4px)" }}
+                    transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                    className="relative mt-4 overflow-hidden rounded-xl border border-gold/30 bg-card text-left shadow-[0_30px_80px_-28px_rgba(0,0,0,0.95)]"
+                  >
+                    {/* gold hairline draws itself across the top edge */}
+                    <motion.span
+                      aria-hidden="true"
+                      initial={{ scaleX: 0 }}
+                      animate={{ scaleX: 1 }}
+                      transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1], delay: 0.12 }}
+                      className="absolute inset-x-0 top-0 h-px origin-left bg-gold/60"
+                    />
+
+                    <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:gap-5 sm:p-6">
+                      <motion.span
+                        initial={{ scale: 0, rotate: -30 }}
+                        animate={{ scale: 1, rotate: 0 }}
+                        transition={{ type: "spring", stiffness: 280, damping: 17, delay: 0.08 }}
+                        className="pulse-soft inline-flex size-11 shrink-0 items-center justify-center rounded-full border border-gold/40 bg-gold/10"
+                      >
+                        <Lock className="h-5 w-5 text-gold" aria-hidden="true" />
+                      </motion.span>
+
+                      <div className="min-w-0 flex-1">
+                        <motion.p
+                          initial={{ opacity: 0, y: 8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1], delay: 0.14 }}
+                          className="eyebrow"
+                        >
+                          Idea saved
+                        </motion.p>
+                        <motion.p
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1], delay: 0.2 }}
+                          className="mt-1.5 font-display text-xl tracking-normal sm:text-2xl"
+                        >
+                          Sign in to start building
+                        </motion.p>
+                        <motion.p
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1], delay: 0.26 }}
+                          className="mt-1.5 text-sm leading-relaxed text-muted-foreground"
+                        >
+                          Your prompt is safe — it will be waiting on your dashboard the
+                          moment you are in.
+                        </motion.p>
+                        <AnimatePresence>
+                          {nudgePrompt ? (
+                            <motion.p
+                              initial={{ opacity: 0, x: -10 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1], delay: 0.32 }}
+                              className="mt-3 truncate border-l-2 border-gold/40 pl-3 font-display text-sm italic text-zinc-300"
+                            >
+                              &ldquo;{nudgePrompt}&rdquo;
+                            </motion.p>
+                          ) : null}
+                        </AnimatePresence>
+                      </div>
+
+                      <motion.div
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1], delay: 0.3 }}
+                        className="flex shrink-0 flex-col-reverse gap-2 max-sm:grid max-sm:grid-cols-2 sm:flex-row sm:items-center"
+                      >
+                        <Button
+                          asChild
+                          size="sm"
+                          variant="outline"
+                          className="h-9 border-gold/30 bg-gold/[0.06] text-gold hover:bg-gold/15 hover:text-gold"
+                        >
+                          <Link href="/auth">Create free account</Link>
+                        </Button>
+                        <Button asChild size="sm" className="h-9">
+                          <Link href="/auth">
+                            Sign in
+                            <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+                          </Link>
+                        </Button>
+                      </motion.div>
+                    </div>
+
+                    <button
+                      type="button"
+                      aria-label="Dismiss sign-in reminder"
+                      onClick={() => setNudgeOpen(false)}
+                      className="absolute right-3 top-3 inline-flex size-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-white/[0.06] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    >
+                      <X className="h-3.5 w-3.5" aria-hidden="true" />
+                    </button>
+                  </motion.div>
+                ) : null}
+              </AnimatePresence>
             </motion.div>
 
             {/* example chips — swipeable on mobile */}

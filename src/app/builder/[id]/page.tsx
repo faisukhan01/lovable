@@ -4,30 +4,27 @@ import { use, useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
-  Check,
   Code2,
   Copy,
   Download,
   FileQuestion,
   GitCompareArrows,
   Globe,
-  History,
   Lightbulb,
   Loader2,
+  MessageSquare,
   Monitor,
   PanelTop,
-  Pencil,
   Rocket,
   Smartphone,
   Tablet,
 } from "lucide-react";
-import { format, isValid } from "date-fns";
 import { toast } from "sonner";
-import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 
-import { BrandLogo } from "@/components/brand-logo";
 import { ChatPanel, displayContent, expandSlash, type ChatMode } from "@/components/builder/chat-panel";
 import { StatusBar, StatusSegment } from "@/components/ide/status-bar";
+import { BuilderExplorer, type BuilderExplorerTab } from "@/components/ide/builder-explorer";
+import { IdeShell, IdeShellSkeleton } from "@/components/ide/ide-shell";
 import { DiffView } from "@/components/builder/diff-view";
 import {
   PreviewPanel,
@@ -35,7 +32,6 @@ import {
   type DeviceMode,
 } from "@/components/builder/preview-panel";
 import { useMinWidth } from "@/components/builder/use-min-width";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -51,7 +47,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -107,6 +102,39 @@ function SegBtn({
   );
 }
 
+/** A VS Code editor tab — flat strip, gold top edge on the active tab. */
+function IdeTab({
+  active,
+  onClick,
+  icon,
+  label,
+}: {
+  active: boolean;
+  onClick: () => void;
+  icon: React.ReactNode;
+  label: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      role="tab"
+      aria-selected={active}
+      className={cn(
+        "flex shrink-0 items-center gap-1.5 border-r border-white/[0.06] border-t-2 px-3 text-xs transition-colors",
+        active
+          ? "border-t-gold bg-background text-foreground"
+          : "border-t-transparent text-muted-foreground hover:bg-white/[0.03] hover:text-foreground"
+      )}
+    >
+      <span className={active ? "text-gold" : "text-zinc-500"} aria-hidden="true">
+        {icon}
+      </span>
+      <span className="whitespace-nowrap">{label}</span>
+    </button>
+  );
+}
+
 export default function BuilderPage({
   params,
 }: {
@@ -131,8 +159,9 @@ export default function BuilderPage({
 
   const [tab, setTab] = useState<BuilderTab>("preview");
   const [device, setDevice] = useState<DeviceMode>("desktop");
-  const [mobileTab, setMobileTab] = useState<"chat" | "preview">("chat");
+  const [mobileTab, setMobileTab] = useState<"chat" | "preview">("preview");
   const [previewKey, setPreviewKey] = useState(0);
+  const [chatOpen, setChatOpen] = useState(true);
 
   /* Ask / Plan / Explain / Diff state */
   const [mode, setMode] = useState<ChatMode>("build");
@@ -465,15 +494,20 @@ export default function BuilderPage({
     }
   }
 
-  /* Load the two selected versions' HTML when the diff tab is active */
+  /* Load the two selected versions' HTML when the diff tab is active —
+     and whenever the compare pickers (or explorer rows) change. */
   const versionsKey = project?.versions.map((v) => v.version).join(",") ?? "";
   useEffect(() => {
     if (tab !== "diff" || !versionsKey) return;
     const nums = versionsKey.split(",").map(Number);
     const to = diffTo ?? nums[0];
     const from = diffFrom ?? nums[1] ?? nums[0];
-    setDiffTo(to);
-    setDiffFrom(from);
+    if (diffTo !== to || diffFrom !== from) {
+      /* First entry on the tab — pin defaults, then the re-run fetches. */
+      setDiffTo(to);
+      setDiffFrom(from);
+      return;
+    }
     let cancelled = false;
     setDiffLoading(true);
     Promise.all([
@@ -491,16 +525,13 @@ export default function BuilderPage({
     return () => {
       cancelled = true;
     };
-  }, [tab, versionsKey]);
+  }, [tab, versionsKey, diffFrom, diffTo]);
 
   /* --------------------------------- Screens -------------------------------- */
   if (loadingInitial) {
-    return (
-      <div className="flex h-screen flex-col items-center justify-center gap-3">
-        <Loader2 className="size-6 animate-spin text-gold" />
-        <p className="text-sm text-muted-foreground">Opening builder…</p>
-      </div>
-    );
+    /* The IDE frame stays up while the workspace loads — no bare-spinner
+       flash between "Start building" and the builder. */
+    return <IdeShellSkeleton hint="Opening builder…" />;
   }
 
   if (loadError) {
@@ -541,7 +572,7 @@ export default function BuilderPage({
               <Button asChild variant="outline">
                 <Link href="/dashboard">
                   <ArrowLeft className="size-4" />
-                  Back to dashboard
+                  Back to workspace
                 </Link>
               </Button>
             ) : unauthenticated ? (
@@ -565,557 +596,453 @@ export default function BuilderPage({
   if (!project) return null;
 
   /* --------------------------------- Layout --------------------------------- */
+
+  /* Explorer (same tree on desktop sidebar and mobile drawer) */
+  const explorer = (
+    <BuilderExplorer
+      project={project}
+      activeTab={tab}
+      diffTo={diffTo}
+      restoringVersion={restoringVersion}
+      generating={!!generating}
+      publishing={publishing}
+      onOpenTab={(t: BuilderExplorerTab) => {
+        setTab(t);
+        if (!isDesktop) setMobileTab("preview");
+      }}
+      onOpenDiff={(from, to) => {
+        setDiffFrom(from);
+        setDiffTo(to);
+        setTab("diff");
+        if (!isDesktop) setMobileTab("preview");
+      }}
+      onRestore={(v) => void handleRestore(v)}
+      onRename={() => {
+        setRenameValue(project.name);
+        setRenameOpen(true);
+      }}
+      onPublish={() => void handlePublish()}
+      onDownload={handleDownload}
+    />
+  );
+
+  /* Title-bar action — Publish / View live */
+  const titleActions = project.published_slug ? (
+    <Button
+      asChild
+      variant="outline"
+      size="sm"
+      className="h-6.5 gap-1.5 rounded-md px-2 text-xs"
+    >
+      <a
+        href={`/p/${project.published_slug}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="View live app"
+      >
+        <Globe className="size-3.5" />
+        <span className="hidden sm:inline">Live</span>
+      </a>
+    </Button>
+  ) : (
+    <Button
+      size="sm"
+      onClick={handlePublish}
+      disabled={generating || publishing}
+      className="h-6.5 gap-1.5 rounded-md px-2.5 text-xs"
+    >
+      {publishing ? (
+        <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
+      ) : (
+        <Rocket className="size-3.5" aria-hidden="true" />
+      )}
+      <span className="hidden sm:inline">Publish</span>
+    </Button>
+  );
+
+  /* Device picker — shown on the tab strip while previewing */
+  const devicePicker = (
+    <div className="flex items-center gap-0.5 rounded-lg border border-white/10 bg-white/[0.03] p-0.5">
+      <SegBtn active={device === "desktop"} onClick={() => setDevice("desktop")} label="Desktop preview">
+        <Monitor className="size-3.5" />
+      </SegBtn>
+      <SegBtn active={device === "tablet"} onClick={() => setDevice("tablet")} label="Tablet preview">
+        <Tablet className="size-3.5" />
+      </SegBtn>
+      <SegBtn active={device === "mobile"} onClick={() => setDevice("mobile")} label="Mobile preview">
+        <Smartphone className="size-3.5" />
+      </SegBtn>
+    </div>
+  );
+
+  /* Editor content — shared by desktop editor column and mobile stack */
+  const editorContent = (
+    <PreviewPanel
+      project={project}
+      tab={tab}
+      device={device}
+      previewKey={previewKey}
+      generating={!!generating}
+      onRefresh={() => setPreviewKey((k) => k + 1)}
+      onDownload={handleDownload}
+      onExplain={() => void handleExplain()}
+    >
+      {tab === "diff" ? (
+        <div className="flex h-full flex-col">
+          {diffSelector}
+          <DiffView
+            before={diffBefore}
+            after={diffAfter}
+            loading={diffLoading}
+            className="min-h-0 flex-1"
+          />
+        </div>
+      ) : null}
+    </PreviewPanel>
+  );
+
+  const chatPanel = (
+    <ChatPanel
+      project={project}
+      messages={visibleMessages}
+      generating={!!generating}
+      sending={sending}
+      asking={thinking}
+      mode={mode}
+      onModeChange={setMode}
+      onSend={handleSend}
+      className="border-r-0 border-l border-white/[0.06]"
+    />
+  );
+
+  const statusLeft = (
+    <>
+      <StatusSegment pulse={!!generating} className={generating ? "text-gold" : ""}>
+        {generating
+          ? `building v${project.version + 1}`
+          : project.status === "error"
+            ? "last build failed"
+            : "ready"}
+      </StatusSegment>
+      <StatusSegment>
+        v{project.version} · {project.messages.length} msg
+      </StatusSegment>
+    </>
+  );
+
+  const statusRight = (
+    <>
+      {tab === "preview" ? (
+        <StatusSegment className="hidden sm:flex">{device} preview</StatusSegment>
+      ) : null}
+      <StatusSegment>{tab} view</StatusSegment>
+      <StatusSegment className="hidden sm:flex">
+        <span className="size-1.5 animate-pulse rounded-full bg-gold" aria-hidden="true" />
+        Z.AI connected
+      </StatusSegment>
+    </>
+  );
+
+  /* ------------------------------- Desktop IDE ------------------------------- */
+  if (isDesktop) {
+    return (
+      <>
+        <IdeShell
+          sidebar={explorer}
+          actions={titleActions}
+          mainClassName="overflow-hidden"
+          breadcrumb={
+            tab === "preview" ? (
+              devicePicker
+            ) : tab === "code" ? (
+              <span aria-hidden="true">
+                lovify <span className="text-zinc-700">/</span> {project.name}{" "}
+                <span className="text-zinc-700">/</span>{" "}
+                <span className="text-zinc-500">index.html</span>
+              </span>
+            ) : (
+              <span aria-hidden="true">
+                lovify <span className="text-zinc-700">/</span> {project.name}{" "}
+                <span className="text-zinc-700">/</span>{" "}
+                <span className="text-zinc-500">versions.diff</span>
+              </span>
+            )
+          }
+          statusLeft={statusLeft}
+          statusRight={statusRight}
+          chat={chatPanel}
+          chatOpen={chatOpen}
+          onToggleChat={() => setChatOpen((v) => !v)}
+          tabs={
+            <>
+              <IdeTab
+                active={tab === "preview"}
+                onClick={() => setTab("preview")}
+                icon={<PanelTop className="size-3.5" />}
+                label="Preview"
+              />
+              <IdeTab
+                active={tab === "code"}
+                onClick={() => setTab("code")}
+                icon={<Code2 className="size-3.5" />}
+                label="index.html"
+              />
+              <IdeTab
+                active={tab === "diff"}
+                onClick={() => setTab("diff")}
+                icon={<GitCompareArrows className="size-3.5" />}
+                label="versions.diff"
+              />
+              {generating ? (
+                <span
+                  className="flex items-center gap-1.5 self-center px-3 font-mono text-[9px] uppercase tracking-[0.16em] text-gold"
+                  role="status"
+                >
+                  <span className="size-1.5 animate-pulse rounded-full bg-gold" aria-hidden="true" />
+                  building
+                </span>
+              ) : null}
+            </>
+          }
+        >
+          {editorContent}
+        </IdeShell>
+
+        <RenameDialog
+          open={renameOpen}
+          onOpenChange={setRenameOpen}
+          renameValue={renameValue}
+          setRenameValue={setRenameValue}
+          renaming={renaming}
+          onRename={() => void handleRename()}
+        />
+        <ExplainDialog
+          open={explainOpen}
+          onOpenChange={setExplainOpen}
+          loading={explainLoading}
+          text={explainText}
+        />
+        <PublishDialog
+          open={publishOpen}
+          onOpenChange={setPublishOpen}
+          url={publishFullUrl}
+          onCopy={() => void copyPublishUrl()}
+        />
+      </>
+    );
+  }
+
+  /* ------------------------- Mobile / tablet stack ------------------------- */
   return (
-    <div className="flex h-dvh flex-col overflow-hidden">
-      {/* Header — IDE chrome: identity + tools, row 2 (mobile): scrollable tools */}
-      <header className="shrink-0 border-b border-white/[0.06] bg-[oklch(0.125_0_0)] px-2.5 sm:px-4">
-        <div className="flex h-10 items-center gap-2 sm:gap-3">
-          <Button
-            asChild
-            variant="ghost"
-            size="icon"
-            aria-label="Back to dashboard"
-          >
-            <Link href="/dashboard">
-              <ArrowLeft className="size-4" />
-            </Link>
-          </Button>
-          <Separator orientation="vertical" className="hidden h-5 sm:block" />
-
-          <span className="truncate max-w-[120px] font-medium sm:max-w-xs">
-            {project.name}
-          </span>
-          <Badge variant="outline" className="shrink-0">
-            v{project.version}
-          </Badge>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-7 shrink-0 text-muted-foreground"
-            aria-label="Rename project"
-            title="Rename"
-            disabled={generating}
-            onClick={() => {
-              setRenameValue(project.name);
-              setRenameOpen(true);
-            }}
-          >
-            <Pencil className="size-3.5" />
-          </Button>
-          {generating ? (
-            <Badge className="hidden shrink-0 border border-gold/30 bg-gold/10 text-gold hover:bg-gold/10 sm:inline-flex">
-              <span className="size-1.5 animate-pulse rounded-full bg-gold" />
-              Building…
-            </Badge>
-          ) : null}
-
-          <div className="flex-1" />
-
-          {/* Download HTML (desktop) */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="hidden md:inline-flex"
-            aria-label="Download app as HTML"
-            title="Download HTML"
-            disabled={!project.html}
-            onClick={handleDownload}
-          >
-            <Download className="size-4" />
-          </Button>
-
-          {/* Version history (desktop) */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="hidden md:inline-flex"
-                aria-label="Version history"
-                title="Version history"
-                disabled={generating || restoringVersion !== null}
-              >
-                {restoringVersion !== null ? (
-                  <Loader2 className="size-4 animate-spin" />
-                ) : (
-                  <History className="size-4" />
-                )}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="max-h-72 w-64 overflow-y-auto">
-              {project.versions.length === 0 ? (
-                <p className="px-2 py-4 text-center text-xs text-muted-foreground">
-                  No versions yet
-                </p>
-              ) : (
-                project.versions.map((v) => {
-                  const d = v.created_at ? new Date(v.created_at) : null;
-                  return (
-                    <DropdownMenuItem
-                      key={v.id}
-                      disabled={restoringVersion !== null}
-                      onClick={() => void handleRestore(v.version)}
-                    >
-                      <span className="min-w-0 flex-1">
-                        <span className="block truncate">
-                          v{v.version} · {v.label}
-                        </span>
-                        <span className="block text-[10px] text-muted-foreground">
-                          {d && isValid(d)
-                            ? format(d, "MMM d, yyyy · HH:mm")
-                            : ""}
-                        </span>
-                      </span>
-                      {v.version === project.version ? (
-                        <Check className="size-3.5 shrink-0 text-gold" />
-                      ) : null}
-                    </DropdownMenuItem>
-                  );
-                })
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          {/* Device toggle (preview only, desktop) */}
-          {tab === "preview" ? (
-            <div className="hidden items-center gap-0.5 rounded-lg border border-white/10 bg-white/[0.03] p-0.5 sm:flex">
-              <SegBtn
-                active={device === "desktop"}
-                onClick={() => setDevice("desktop")}
-                label="Desktop preview"
-              >
-                <Monitor className="size-3.5" />
-              </SegBtn>
-              <SegBtn
-                active={device === "tablet"}
-                onClick={() => setDevice("tablet")}
-                label="Tablet preview"
-              >
-                <Tablet className="size-3.5" />
-              </SegBtn>
-              <SegBtn
-                active={device === "mobile"}
-                onClick={() => setDevice("mobile")}
-                label="Mobile preview"
-              >
-                <Smartphone className="size-3.5" />
-              </SegBtn>
-            </div>
-          ) : null}
-
-          {/* Preview / Code / Diff segmented control (desktop) */}
-          <div className="hidden items-center gap-0.5 rounded-lg border border-white/10 bg-white/[0.03] p-0.5 md:flex">
+    <>
+      <IdeShell
+        sidebar={explorer}
+        actions={titleActions}
+        mainClassName="overflow-hidden"
+        statusLeft={statusLeft}
+        statusRight={statusRight}
+        tabs={
+          <div className="flex items-center gap-1 px-2">
             <SegBtn
-              active={tab === "preview"}
-              onClick={() => setTab("preview")}
-              label="Preview"
+              active={mobileTab === "chat"}
+              onClick={() => setMobileTab("chat")}
+              label="AI chat"
+            >
+              <MessageSquare className="size-3.5" />
+              Chat
+            </SegBtn>
+            <SegBtn
+              active={mobileTab === "preview"}
+              onClick={() => setMobileTab("preview")}
+              label="Editor"
             >
               <PanelTop className="size-3.5" />
-              <span className="hidden md:inline">Preview</span>
-            </SegBtn>
-            <SegBtn
-              active={tab === "code"}
-              onClick={() => setTab("code")}
-              label="Code"
-            >
-              <Code2 className="size-3.5" />
-              <span className="hidden md:inline">Code</span>
-            </SegBtn>
-            <SegBtn
-              active={tab === "diff"}
-              onClick={() => setTab("diff")}
-              label="Version diff"
-            >
-              <GitCompareArrows className="size-3.5" />
-              <span className="hidden md:inline">Diff</span>
+              Editor
             </SegBtn>
           </div>
+        }
+      >
+        {mobileTab === "chat" ? (
+          <ChatPanel
+            project={project}
+            messages={visibleMessages}
+            generating={!!generating}
+            sending={sending}
+            asking={thinking}
+            mode={mode}
+            onModeChange={setMode}
+            onSend={handleSend}
+            className="border-r-0"
+          />
+        ) : (
+          editorContent
+        )}
+      </IdeShell>
 
-          {/* Publish / View live */}
-          {project.published_slug ? (
-            <Button asChild variant="outline" size="sm" className="shrink-0">
-              <a
-                href={`/p/${project.published_slug}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="View live app"
-              >
-                <Globe className="size-4" />
-                <span className="hidden sm:inline">View live</span>
-              </a>
-            </Button>
+      <RenameDialog
+        open={renameOpen}
+        onOpenChange={setRenameOpen}
+        renameValue={renameValue}
+        setRenameValue={setRenameValue}
+        renaming={renaming}
+        onRename={() => void handleRename()}
+      />
+      <ExplainDialog
+        open={explainOpen}
+        onOpenChange={setExplainOpen}
+        loading={explainLoading}
+        text={explainText}
+      />
+      <PublishDialog
+        open={publishOpen}
+        onOpenChange={setPublishOpen}
+        url={publishFullUrl}
+        onCopy={() => void copyPublishUrl()}
+      />
+    </>
+  );
+}
+
+/* ------------------------------ Shared dialogs ----------------------------- */
+
+function RenameDialog({
+  open,
+  onOpenChange,
+  renameValue,
+  setRenameValue,
+  renaming,
+  onRename,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  renameValue: string;
+  setRenameValue: (v: string) => void;
+  renaming: boolean;
+  onRename: () => void;
+}) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-sm">
+        <DialogHeader>
+          <DialogTitle className="font-display text-xl tracking-normal">Rename app</DialogTitle>
+          <DialogDescription>
+            A clear name helps you find it later in the explorer.
+          </DialogDescription>
+        </DialogHeader>
+        <Input
+          autoFocus
+          value={renameValue}
+          onChange={(e) => setRenameValue(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") onRename();
+          }}
+          aria-label="App name"
+        />
+        <DialogFooter>
+          <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={renaming}>
+            Cancel
+          </Button>
+          <Button onClick={onRename} disabled={renaming || !renameValue.trim()}>
+            {renaming ? <Loader2 className="size-4 animate-spin" /> : null}
+            Save
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function ExplainDialog({
+  open,
+  onOpenChange,
+  loading,
+  text,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  loading: boolean;
+  text: string;
+}) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2.5 font-display text-xl tracking-normal">
+            <Lightbulb className="size-4 text-gold" />
+            How this app works
+          </DialogTitle>
+          <DialogDescription>
+            Z.AI read the code and explains it — nothing was changed.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="max-h-[60vh] overflow-y-auto whitespace-pre-wrap rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 text-sm leading-relaxed text-zinc-200">
+          {loading ? (
+            <span className="flex items-center gap-2 text-muted-foreground">
+              <Loader2 className="size-4 animate-spin text-gold" />
+              Reading the code…
+            </span>
           ) : (
-            <Button
-              size="sm"
-              onClick={handlePublish}
-              disabled={generating || publishing}
-              className="shrink-0"
-            >
-              {publishing ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : (
-                <Rocket className="size-4" />
-              )}
-              <span className="hidden sm:inline">Publish</span>
-            </Button>
+            text
           )}
         </div>
-
-        {/* Row 2 — mobile-only scrollable tools */}
-        <div className="flex h-11 items-center gap-1.5 overflow-x-auto pb-1.5 [-ms-overflow-style:none] [scrollbar-width:none] md:hidden [&::-webkit-scrollbar]:hidden">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-7 shrink-0 gap-1.5 text-xs text-muted-foreground"
-            aria-label="Download app as HTML"
-            disabled={!project.html}
-            onClick={handleDownload}
-          >
-            <Download className="size-3.5" />
-            HTML
+        <DialogFooter>
+          <Button variant="ghost" onClick={() => onOpenChange(false)}>
+            Close
           </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 shrink-0 gap-1.5 text-xs text-muted-foreground"
-                aria-label="Version history"
-                disabled={generating || restoringVersion !== null}
-              >
-                {restoringVersion !== null ? (
-                  <Loader2 className="size-3.5 animate-spin" />
-                ) : (
-                  <History className="size-3.5" />
-                )}
-                History
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="max-h-72 w-64 overflow-y-auto">
-              {project.versions.length === 0 ? (
-                <p className="px-2 py-4 text-center text-xs text-muted-foreground">
-                  No versions yet
-                </p>
-              ) : (
-                project.versions.map((v) => {
-                  const d = v.created_at ? new Date(v.created_at) : null;
-                  return (
-                    <DropdownMenuItem
-                      key={v.id}
-                      disabled={restoringVersion !== null}
-                      onClick={() => void handleRestore(v.version)}
-                    >
-                      <span className="min-w-0 flex-1">
-                        <span className="block truncate">
-                          v{v.version} · {v.label}
-                        </span>
-                        <span className="block text-[10px] text-muted-foreground">
-                          {d && isValid(d)
-                            ? format(d, "MMM d, yyyy · HH:mm")
-                            : ""}
-                        </span>
-                      </span>
-                      {v.version === project.version ? (
-                        <Check className="size-3.5 shrink-0 text-gold" />
-                      ) : null}
-                    </DropdownMenuItem>
-                  );
-                })
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <div className="flex shrink-0 items-center gap-0.5 rounded-lg border border-white/10 bg-white/[0.03] p-0.5">
-            <SegBtn
-              active={tab === "preview"}
-              onClick={() => setTab("preview")}
-              label="Preview"
-            >
-              <PanelTop className="size-3.5" />
-              Preview
-            </SegBtn>
-            <SegBtn
-              active={tab === "code"}
-              onClick={() => setTab("code")}
-              label="Code"
-            >
-              <Code2 className="size-3.5" />
-              Code
-            </SegBtn>
-          </div>
-          {tab === "preview" ? (
-            <div className="flex shrink-0 items-center gap-0.5 rounded-lg border border-white/10 bg-white/[0.03] p-0.5">
-              <SegBtn
-                active={device === "desktop"}
-                onClick={() => setDevice("desktop")}
-                label="Desktop preview"
-              >
-                <Monitor className="size-3.5" />
-              </SegBtn>
-              <SegBtn
-                active={device === "tablet"}
-                onClick={() => setDevice("tablet")}
-                label="Tablet preview"
-              >
-                <Tablet className="size-3.5" />
-              </SegBtn>
-              <SegBtn
-                active={device === "mobile"}
-                onClick={() => setDevice("mobile")}
-                label="Mobile preview"
-              >
-                <Smartphone className="size-3.5" />
-              </SegBtn>
-            </div>
-          ) : null}
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
-          {/* Preview / Code / Diff (mobile row) */}
-          <div className="flex shrink-0 items-center gap-0.5 rounded-lg border border-white/10 bg-white/[0.03] p-0.5">
-            <SegBtn active={tab === "diff"} onClick={() => setTab("diff")} label="Version diff">
-              <GitCompareArrows className="size-3.5" />
-              Diff
-            </SegBtn>
-          </div>
-        </div>
-      </header>
-
-      {/* Body */}
-      {isDesktop ? (
-        <PanelGroup direction="horizontal" className="min-h-0 flex-1">
-          <Panel defaultSize={38} minSize={28}>
-            <ChatPanel
-              project={project}
-              messages={visibleMessages}
-              generating={!!generating}
-              sending={sending}
-              asking={thinking}
-              mode={mode}
-              onModeChange={setMode}
-              onSend={handleSend}
-            />
-          </Panel>
-          <PanelResizeHandle className="relative w-px bg-white/[0.06] transition-colors after:absolute after:inset-y-0 after:left-1/2 after:z-10 after:w-1.5 after:-translate-x-1/2 focus-visible:outline-none data-[resize-handle-active]:bg-gold/50" />
-          <Panel minSize={30}>
-            <PreviewPanel
-              project={project}
-              tab={tab}
-              device={device}
-              previewKey={previewKey}
-              generating={!!generating}
-              onRefresh={() => setPreviewKey((k) => k + 1)}
-              onDownload={handleDownload}
-              onExplain={() => void handleExplain()}
-            >
-              {tab === "diff" ? (
-                <div className="flex h-full flex-col">
-                  {diffSelector}
-                  <DiffView
-                    before={diffBefore}
-                    after={diffAfter}
-                    loading={diffLoading}
-                    className="min-h-0 flex-1"
-                  />
-                </div>
-              ) : null}
-            </PreviewPanel>
-          </Panel>
-        </PanelGroup>
-      ) : (
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-          {/* Stacked tabs for small screens */}
-          <div className="flex shrink-0 items-center gap-0.5 border-b border-white/[0.06] px-3 py-2">
-            <div className="flex items-center gap-0.5 rounded-lg border border-white/10 bg-white/[0.03] p-0.5">
-              <SegBtn
-                active={mobileTab === "chat"}
-                onClick={() => setMobileTab("chat")}
-                label="Chat"
-              >
-                Chat
-              </SegBtn>
-              <SegBtn
-                active={mobileTab === "preview"}
-                onClick={() => setMobileTab("preview")}
-                label="Preview"
-              >
-                Preview
-              </SegBtn>
-            </div>
-          </div>
-          <div className="min-h-0 flex-1 overflow-hidden">
-            {mobileTab === "chat" ? (
-              <ChatPanel
-                project={project}
-                messages={visibleMessages}
-                generating={!!generating}
-                sending={sending}
-                asking={thinking}
-                mode={mode}
-                onModeChange={setMode}
-                onSend={handleSend}
-                className="border-r-0"
-              />
-            ) : (
-              <PreviewPanel
-                project={project}
-                tab={tab === "code" ? "code" : tab}
-                device={device}
-                previewKey={previewKey}
-                generating={!!generating}
-                onRefresh={() => setPreviewKey((k) => k + 1)}
-                onDownload={handleDownload}
-                onExplain={() => void handleExplain()}
-              >
-                {tab === "diff" ? (
-                  <div className="flex h-full flex-col">
-                    {diffSelector}
-                    <DiffView
-                      before={diffBefore}
-                      after={diffAfter}
-                      loading={diffLoading}
-                      className="min-h-0 flex-1"
-                    />
-                  </div>
-                ) : null}
-              </PreviewPanel>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* IDE status bar */}
-      <StatusBar
-        left={
-          <>
-            <StatusSegment pulse={!!generating} className={generating ? "text-gold" : ""}>
-              {generating
-                ? `building v${project.version + 1}`
-                : project.status === "error"
-                  ? "last build failed"
-                  : "ready"}
-            </StatusSegment>
-            <StatusSegment>
-              v{project.version} · {project.messages.length} msg
-            </StatusSegment>
-          </>
-        }
-        right={
-          <>
-            {tab === "preview" ? (
-              <StatusSegment className="hidden sm:flex">{device} preview</StatusSegment>
-            ) : null}
-            <StatusSegment>{tab} view</StatusSegment>
-            <StatusSegment className="hidden sm:flex">
-              <span className="size-1.5 animate-pulse rounded-full bg-gold" aria-hidden="true" />
-              Z.AI connected
-            </StatusSegment>
-          </>
-        }
-      />
-
-      {/* Rename dialog */}
-      <Dialog open={renameOpen} onOpenChange={setRenameOpen}>
-        <DialogContent className="sm:max-w-sm">
-          <DialogHeader>
-            <DialogTitle className="font-display text-xl tracking-normal">Rename app</DialogTitle>
-            <DialogDescription>
-              A clear name helps you find it later on the dashboard.
-            </DialogDescription>
-          </DialogHeader>
-          <Input
-            autoFocus
-            value={renameValue}
-            onChange={(e) => setRenameValue(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") void handleRename();
-            }}
-            aria-label="App name"
-          />
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setRenameOpen(false)} disabled={renaming}>
-              Cancel
-            </Button>
-            <Button
-              onClick={() => void handleRename()}
-              disabled={renaming || !renameValue.trim()}
-            >
-              {renaming ? <Loader2 className="size-4 animate-spin" /> : null}
-              Save
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Explain-code dialog */}
-      <Dialog open={explainOpen} onOpenChange={setExplainOpen}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2.5 font-display text-xl tracking-normal">
-              <Lightbulb className="size-4 text-gold" />
-              How this app works
-            </DialogTitle>
-            <DialogDescription>
-              Z.AI read the code and explains it — nothing was changed.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="max-h-[60vh] overflow-y-auto whitespace-pre-wrap rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 text-sm leading-relaxed text-zinc-200">
-            {explainLoading ? (
-              <span className="flex items-center gap-2 text-muted-foreground">
-                <Loader2 className="size-4 animate-spin text-gold" />
-                Reading the code…
-              </span>
-            ) : (
-              explainText
-            )}
-          </div>
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setExplainOpen(false)}>
-              Close
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Publish success dialog */}
-      <Dialog open={publishOpen} onOpenChange={setPublishOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2.5 font-display text-2xl tracking-normal">
-              <span className="flex size-8 items-center justify-center rounded-lg border border-white/15 bg-primary">
-                <Globe className="size-4 text-primary-foreground" />
-              </span>
-              Your app is live
-            </DialogTitle>
-            <DialogDescription>
-              Anyone with this link can use your app. Share it anywhere.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5">
-            <span className="min-w-0 flex-1 truncate font-mono text-xs text-zinc-300">
-              {publishFullUrl}
+function PublishDialog({
+  open,
+  onOpenChange,
+  url,
+  onCopy,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  url: string;
+  onCopy: () => void;
+}) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2.5 font-display text-2xl tracking-normal">
+            <span className="flex size-8 items-center justify-center rounded-lg border border-white/15 bg-primary">
+              <Globe className="size-4 text-primary-foreground" />
             </span>
-            <Button variant="outline" size="sm" onClick={() => void copyPublishUrl()}>
-              <Copy className="size-3.5" />
-              Copy
-            </Button>
-          </div>
+            Your app is live
+          </DialogTitle>
+          <DialogDescription>
+            Anyone with this link can use your app. Share it anywhere.
+          </DialogDescription>
+        </DialogHeader>
 
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setPublishOpen(false)}>
-              Close
-            </Button>
-            <Button asChild>
-              <a
-                href={publishFullUrl || "#"}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <Globe className="size-4" />
-                Open app
-              </a>
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
+        <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5">
+          <span className="min-w-0 flex-1 truncate font-mono text-xs text-zinc-300">
+            {url}
+          </span>
+          <Button variant="outline" size="sm" onClick={onCopy}>
+            <Copy className="size-3.5" />
+            Copy
+          </Button>
+        </div>
+
+        <DialogFooter>
+          <Button variant="ghost" onClick={() => onOpenChange(false)}>
+            Close
+          </Button>
+          <Button asChild>
+            <a href={url || "#"} target="_blank" rel="noopener noreferrer">
+              <Globe className="size-4" />
+              Open app
+            </a>
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

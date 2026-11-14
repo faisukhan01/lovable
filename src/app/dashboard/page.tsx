@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  Loader2,
   Sparkles,
   X,
 } from "lucide-react";
@@ -12,7 +11,7 @@ import { toast } from "sonner";
 import { CommandPalette } from "@/components/dashboard/command-palette";
 import { CreateProjectDialog } from "@/components/dashboard/create-project-dialog";
 import { ExplorerSidebar } from "@/components/ide/explorer-sidebar";
-import { IdeShell } from "@/components/ide/ide-shell";
+import { IdeShell, IdeShellSkeleton } from "@/components/ide/ide-shell";
 import { WelcomeEditor } from "@/components/ide/welcome-editor";
 import { ApiError, createProject, listProjects } from "@/lib/api";
 import { popPendingPrompt, useAuthStore } from "@/lib/store";
@@ -120,13 +119,10 @@ export default function DashboardPage() {
     }
   }
 
-  /* Loader while hydrating or redirecting to /auth */
+  /* Loader while hydrating or redirecting to /auth — keeps the IDE frame
+     up so the Cursor chrome never flashes away mid-navigation. */
   if (!hasHydrated || !token) {
-    return (
-      <div className="flex min-h-dvh items-center justify-center">
-        <Loader2 className="size-6 animate-spin text-gold" aria-label="Loading" />
-      </div>
-    );
+    return <IdeShellSkeleton hint="Opening workspace…" />;
   }
 
   const liveCount = projects.filter((p) => p.published_slug).length;

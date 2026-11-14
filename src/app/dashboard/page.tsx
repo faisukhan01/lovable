@@ -3,53 +3,46 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  AlertTriangle,
-  Compass,
   Loader2,
-  LogOut,
-  MessagesSquare,
-  Plus,
-  Rocket,
-  Settings,
   Sparkles,
+  X,
 } from "lucide-react";
+import { toast } from "sonner";
 
-import Link from "next/link";
-import { BrandLogo } from "@/components/brand-logo";
 import { CommandPalette } from "@/components/dashboard/command-palette";
 import { CreateProjectDialog } from "@/components/dashboard/create-project-dialog";
-import { ProjectCard } from "@/components/dashboard/project-card";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Skeleton } from "@/components/ui/skeleton";
-import { ApiError, listProjects } from "@/lib/api";
+import { ExplorerSidebar } from "@/components/ide/explorer-sidebar";
+import { IdeShell } from "@/components/ide/ide-shell";
+import { WelcomeEditor } from "@/components/ide/welcome-editor";
+import { ApiError, createProject, listProjects } from "@/lib/api";
 import { popPendingPrompt, useAuthStore } from "@/lib/store";
 import type { ProjectSummary } from "@/lib/types";
 
+/**
+ * The Lovify workspace — a VS Code / Cursor style IDE view.
+ * Title bar + activity bar + explorer side bar + Welcome editor tab,
+ * with the Z.AI prompt composer front and center.
+ */
 export default function DashboardPage() {
   const router = useRouter();
   const token = useAuthStore((s) => s.token);
   const user = useAuthStore((s) => s.user);
   const hasHydrated = useAuthStore((s) => s.hasHydrated);
-  const clear = useAuthStore((s) => s.clear);
 
-  const [projects, setProjects] = useState<(ProjectSummary & { html?: string | null })[]>([]);
+  const [projects, setProjects] = useState<ProjectSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
-  const [pendingPrompt, setPendingPrompt] = useState<string | null>(null);
+  const [dialogPrompt, setDialogPrompt] = useState<string | null>(null);
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const [building, setBuilding] = useState(false);
 
-  /* Global Cmd/Ctrl+K toggles the command palette. */
+  /* Auth guard */
+  useEffect(() => {
+    if (hasHydrated && !token) router.replace("/auth");
+  }, [hasHydrated, token, router]);
+
+  /* Global ⌘/Ctrl + K toggles the command palette. */
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
@@ -60,11 +53,6 @@ export default function DashboardPage() {
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
-
-  /* Auth guard */
-  useEffect(() => {
-    if (hasHydrated && !token) router.replace("/auth");
-  }, [hasHydrated, token, router]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -86,251 +74,172 @@ export default function DashboardPage() {
   useEffect(() => {
     if (hasHydrated && token) {
       void load();
-      /* A prompt stashed before auth (or after a failed auto-build) — open
-         the create dialog pre-filled so the idea is never lost. */
+      /* A prompt stashed before auth (landing page or chat) opens the
+         composer dialog pre-filled — the idea is never lost. */
       const pending = popPendingPrompt();
       if (pending) {
-        setPendingPrompt(pending);
+        setDialogPrompt(pending);
         setCreateOpen(true);
       }
     }
   }, [hasHydrated, token, load]);
 
-  function handleSignOut() {
-    clear();
-    router.replace("/");
+  /* Keep the tree live while one of the apps is generating. */
+  useEffect(() => {
+    if (hasHydrated && token && projects.some((p) => p.status === "generating")) {
+      const t = setInterval(() => void load(), 4000);
+      return () => clearInterval(t);
+    }
+  }, [hasHydrated, token, projects, load]);
+
+  function openNewProject(seed?: string | null) {
+    setDialogPrompt(seed ?? null);
+    setCreateOpen(true);
   }
 
-  function handleDeleted(id: string) {
-    setProjects((prev) => prev.filter((p) => p.id !== id));
+  /* Direct build from the Welcome composer (Cursor style). */
+  async function handleBuild(prompt: string) {
+    if (building) return;
+    setBuilding(true);
+    try {
+      const project = await createProject(prompt);
+      toast.success("Project created — Lovify is building it");
+      router.push(`/builder/${project.id}`);
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 401) {
+        router.replace("/auth");
+        return;
+      }
+      toast.error(
+        err instanceof ApiError
+          ? err.message
+          : "Could not create the project. Please try again."
+      );
+    } finally {
+      setBuilding(false);
+    }
   }
 
-  function handleRenamed(id: string, name: string) {
-    setProjects((prev) => prev.map((p) => (p.id === id ? { ...p, name } : p)));
-  }
-
-  const liveCount = projects.filter((p) => p.published_slug).length;
-  const hour = new Date().getHours();
-  const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
-  const displayName = (user?.name || user?.email?.split("@")[0] || "builder");
-
-  /* Centered loader while hydrating or redirecting to /auth */
+  /* Loader while hydrating or redirecting to /auth */
   if (!hasHydrated || !token) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <div className="flex min-h-dvh items-center justify-center">
         <Loader2 className="size-6 animate-spin text-gold" aria-label="Loading" />
       </div>
     );
   }
 
-  const initial = (user?.email?.trim()?.[0] ?? "?").toUpperCase();
+  const liveCount = projects.filter((p) => p.published_slug).length;
+  const displayName = user?.name || user?.email?.split("@")[0] || "builder";
 
   return (
-    <div className="relative flex min-h-screen flex-col">
-      {/* Top nav */}
-      <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-white/[0.06] bg-background/80 px-4 backdrop-blur sm:px-6">
-        <BrandLogo href="/dashboard" size={24} />
-        <div className="flex items-center gap-2 sm:gap-3">
-          <Button
-            asChild
-            variant="ghost"
-            size="icon"
-            aria-label="Lovify Chat"
-            className="text-muted-foreground sm:hidden"
-          >
-            <Link href="/chat">
-              <MessagesSquare className="size-4" />
-            </Link>
-          </Button>
-          <Button
-            asChild
-            variant="ghost"
-            className="hidden text-muted-foreground sm:inline-flex"
-          >
-            <Link href="/chat">
-              <MessagesSquare className="size-4" />
-              Chat
-            </Link>
-          </Button>
-          <Button
-            asChild
-            variant="ghost"
-            size="icon"
-            aria-label="Explore gallery"
-            className="text-muted-foreground sm:hidden"
-          >
-            <Link href="/explore">
-              <Compass className="size-4" />
-            </Link>
-          </Button>
-          <Button
-            asChild
-            variant="ghost"
-            className="hidden text-muted-foreground sm:inline-flex"
-          >
-            <Link href="/explore">
-              <Compass className="size-4" />
-              Explore
-            </Link>
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setPaletteOpen(true)}
-            aria-label="Open command palette"
-            className="hidden gap-2 lg:inline-flex"
-          >
-            <kbd className="font-mono text-[10px] text-muted-foreground">⌘K</kbd>
-          </Button>
-          <Button onClick={() => setCreateOpen(true)}>
-            <Plus className="size-4" />
-            New project
-          </Button>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
+    <>
+      <IdeShell
+        onOpenPalette={() => setPaletteOpen(true)}
+        onNewProject={() => openNewProject()}
+        sidebar={
+          <ExplorerSidebar
+            projects={projects}
+            loading={loading}
+            onNewProject={() => openNewProject()}
+            onNewFromTemplate={(prompt) => openNewProject(prompt)}
+            onChanged={() => void load()}
+          />
+        }
+        tabs={
+          <>
+            {/* active editor tab — VS Code style with gold top edge */}
+            <div
+              aria-current="page"
+              className="flex items-center gap-1.5 border-r border-white/[0.06] border-t-2 border-t-gold bg-background px-3.5"
+            >
+              <Sparkles className="size-3.5 text-gold" aria-hidden="true" />
+              <span className="text-xs text-foreground">Welcome</span>
               <button
                 type="button"
-                aria-label="Account menu"
-                className="rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                aria-label="Close tab (not really — this is home)"
+                title="Home tab"
+                className="ml-1 inline-flex size-4 items-center justify-center rounded text-muted-foreground opacity-0 transition-opacity hover:bg-white/[0.08] hover:opacity-100"
               >
-                <Avatar className="border border-white/10">
-                  <AvatarFallback className="bg-white/[0.08] text-sm font-semibold text-foreground">
-                    {initial}
-                  </AvatarFallback>
-                </Avatar>
+                <X className="size-3" aria-hidden="true" />
               </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel className="font-normal">
-                <span className="sr-only">Signed in as</span>
-                <span className="block truncate text-xs text-muted-foreground">
-                  {user?.email ?? "Signed in"}
-                </span>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => router.push("/settings")}>
-                <Settings />
-                Settings
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleSignOut}>
-                <LogOut />
-                Sign out
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </header>
-
-      {/* Main */}
-      <main className="relative z-10 mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6">
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <p className="text-sm text-muted-foreground">
-              {greeting}, <span className="text-foreground">{displayName}</span>
-            </p>
-            <div className="mt-1 flex items-center gap-3">
-              <h1 className="font-display text-3xl tracking-normal">
-                Your apps
-              </h1>
-              {!loading && !error ? (
-                <Badge
-                  variant="secondary"
-                  className="border border-white/10 bg-white/[0.06] text-muted-foreground"
-                >
-                  {projects.length}
-                </Badge>
-              ) : null}
             </div>
-          </div>
-          {!loading && !error && projects.length > 0 ? (
-            <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs text-muted-foreground">
-                <Sparkles className="size-3.5 text-gold" />
-                {projects.length} app{projects.length === 1 ? "" : "s"} built
-              </span>
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-gold/25 bg-gold/10 px-3 py-1.5 text-xs text-gold">
-                <Rocket className="size-3.5" />
-                {liveCount} live
-              </span>
-            </div>
-          ) : null}
-        </div>
-
-        {loading ? (
-          <div className="mt-6 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="glass-panel overflow-hidden rounded-2xl">
-                <Skeleton className="aspect-video w-full rounded-none bg-white/5" />
-                <div className="space-y-3 p-4">
-                  <Skeleton className="h-4 w-2/3 bg-white/5" />
-                  <Skeleton className="h-3 w-full bg-white/5" />
-                  <Skeleton className="h-3 w-1/2 bg-white/5" />
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : error ? (
-          <div className="mt-6 flex flex-col items-start gap-4 rounded-2xl border border-rose-400/30 bg-rose-500/10 p-6 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-start gap-3">
-              <AlertTriangle className="mt-0.5 size-5 shrink-0 text-rose-400" />
-              <div>
-                <p className="font-display font-semibold text-rose-100">
-                  Couldn&rsquo;t load your apps
-                </p>
-                <p className="mt-1 text-sm text-muted-foreground">{error}</p>
-              </div>
-            </div>
-            <Button variant="outline" onClick={() => void load()} className="shrink-0">
-              Try again
-            </Button>
-          </div>
-        ) : projects.length === 0 ? (
-          <div className="flex flex-col items-center py-24 text-center">
-            <div className="flex size-16 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04]">
-              <Sparkles className="size-7 text-gold" />
-            </div>
-            <h2 className="mt-6 font-display text-2xl tracking-normal">
-              Nothing here yet
-            </h2>
-            <p className="mt-2 max-w-sm text-sm text-muted-foreground">
-              Describe an app in one sentence and watch it come to life.
-            </p>
-            <Button
-              onClick={() => setCreateOpen(true)}
-              className="mt-6"
+          </>
+        }
+        breadcrumb={
+          <span aria-hidden="true">
+            lovify <span className="text-zinc-700">/</span> workspace{" "}
+            <span className="text-zinc-700">/</span>{" "}
+            <span className="text-zinc-500">welcome.md</span>
+          </span>
+        }
+        statusLeft={
+          <>
+            <span className="hidden items-center gap-1.5 px-2.5 sm:flex">
+              workspace:
+              <span className="text-zinc-200">{displayName}</span>
+            </span>
+            {error ? (
+              <span className="px-2.5 text-rose-300">tree load failed</span>
+            ) : null}
+          </>
+        }
+        statusRight={
+          <>
+            <span className="px-2.5">
+              {loading ? "…" : `${projects.length} apps · ${liveCount} live`}
+            </span>
+            <span className="hidden items-center gap-1.5 px-2.5 sm:flex">
+              <span className="size-1.5 animate-pulse rounded-full bg-gold" aria-hidden="true" />
+              Z.AI connected
+            </span>
+          </>
+        }
+      >
+        {error ? (
+          <div className="mx-auto mt-10 max-w-md rounded-xl border border-rose-400/30 bg-rose-500/10 p-5 text-sm text-rose-100">
+            {error} — check your connection and{" "}
+            <button
+              type="button"
+              onClick={() => void load()}
+              className="underline underline-offset-2"
             >
-              <Sparkles className="size-4" />
-              Create your first app
-            </Button>
+              retry
+            </button>
+            .
           </div>
         ) : (
-          <div className="mt-6 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-            {projects.map((p) => (
-              <ProjectCard
-                key={p.id}
-                project={p}
-                onDeleted={handleDeleted}
-                onRenamed={handleRenamed}
-                onDuplicated={() => void load()}
-                onUnpublished={() => void load()}
-              />
-            ))}
-          </div>
+          <WelcomeEditor
+            projects={projects}
+            loading={loading}
+            creating={building}
+            onNewProject={() => openNewProject()}
+            onOpen={(id) => router.push(`/builder/${id}`)}
+            onBuild={(prompt) => void handleBuild(prompt)}
+          />
         )}
-      </main>
+      </IdeShell>
 
       <CreateProjectDialog
+        /* Keyed by the seed so every template / stashed prompt starts a
+           fresh draft (the dialog resets on close otherwise). */
+        key={dialogPrompt ?? "blank"}
         open={createOpen}
-        onOpenChange={setCreateOpen}
-        initialPrompt={pendingPrompt}
+        onOpenChange={(open) => {
+          setCreateOpen(open);
+          if (!open) {
+            /* keep the seeded value until the dialog has reset itself */
+            setTimeout(() => setDialogPrompt(null), 200);
+          }
+        }}
+        initialPrompt={dialogPrompt}
       />
       <CommandPalette
         open={paletteOpen}
         onOpenChange={setPaletteOpen}
         projects={projects.map((p) => ({ id: p.id, name: p.name, status: p.status }))}
-        onNewProject={() => setCreateOpen(true)}
+        onNewProject={() => openNewProject()}
       />
-    </div>
+    </>
   );
 }

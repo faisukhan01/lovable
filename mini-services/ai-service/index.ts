@@ -82,6 +82,15 @@ function json(data: unknown, status = 200) {
 /*  Core completion with retries                                      */
 /* ------------------------------------------------------------------ */
 
+function isAuthError(err: any): boolean {
+  const msg = String(err?.message || err || '');
+  return (
+    msg.includes('X-Token') ||
+    msg.includes('status 401') ||
+    msg.includes('Configuration file not found')
+  );
+}
+
 async function complete(messages: any[], retries = 2, maxTokens = 16000): Promise<string> {
   let lastError: any;
   for (let attempt = 0; attempt <= retries; attempt++) {
@@ -100,6 +109,14 @@ async function complete(messages: any[], retries = 2, maxTokens = 16000): Promis
     } catch (err: any) {
       lastError = err;
       console.error(`[ai-service] attempt ${attempt + 1} failed:`, err?.message || err);
+      /* The SDK caches its credentials the first time it is created. If the
+         platform credentials get refreshed (e.g. /etc/.z-ai-config re-issued
+         after boot), the cached client keeps calling without a valid
+         X-Token — drop the cache so the next attempt re-reads the config. */
+      if (isAuthError(err)) {
+        console.log('[ai-service] auth failure — re-reading Z.AI credentials');
+        zaiPromise = null;
+      }
       if (attempt < retries) {
         await new Promise((r) => setTimeout(r, 1200 * (attempt + 1)));
       }

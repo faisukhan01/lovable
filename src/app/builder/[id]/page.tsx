@@ -27,6 +27,7 @@ import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 
 import { BrandLogo } from "@/components/brand-logo";
 import { ChatPanel, displayContent, expandSlash, type ChatMode } from "@/components/builder/chat-panel";
+import { StatusBar, StatusSegment } from "@/components/ide/status-bar";
 import { DiffView } from "@/components/builder/diff-view";
 import {
   PreviewPanel,
@@ -565,10 +566,10 @@ export default function BuilderPage({
 
   /* --------------------------------- Layout --------------------------------- */
   return (
-    <div className="flex h-screen flex-col overflow-hidden">
-      {/* Header — row 1: identity + publish, row 2 (mobile): scrollable tools */}
-      <header className="shrink-0 border-b border-white/[0.06] bg-background/60 px-2.5 backdrop-blur-xl sm:px-4">
-        <div className="flex h-12 items-center gap-2 sm:h-14 sm:gap-3">
+    <div className="flex h-dvh flex-col overflow-hidden">
+      {/* Header — IDE chrome: identity + tools, row 2 (mobile): scrollable tools */}
+      <header className="shrink-0 border-b border-white/[0.06] bg-[oklch(0.125_0_0)] px-2.5 sm:px-4">
+        <div className="flex h-10 items-center gap-2 sm:gap-3">
           <Button
             asChild
             variant="ghost"
@@ -979,6 +980,36 @@ export default function BuilderPage({
           </div>
         </div>
       )}
+
+      {/* IDE status bar */}
+      <StatusBar
+        left={
+          <>
+            <StatusSegment pulse={!!generating} className={generating ? "text-gold" : ""}>
+              {generating
+                ? `building v${project.version + 1}`
+                : project.status === "error"
+                  ? "last build failed"
+                  : "ready"}
+            </StatusSegment>
+            <StatusSegment>
+              v{project.version} · {project.messages.length} msg
+            </StatusSegment>
+          </>
+        }
+        right={
+          <>
+            {tab === "preview" ? (
+              <StatusSegment className="hidden sm:flex">{device} preview</StatusSegment>
+            ) : null}
+            <StatusSegment>{tab} view</StatusSegment>
+            <StatusSegment className="hidden sm:flex">
+              <span className="size-1.5 animate-pulse rounded-full bg-gold" aria-hidden="true" />
+              Z.AI connected
+            </StatusSegment>
+          </>
+        }
+      />
 
       {/* Rename dialog */}
       <Dialog open={renameOpen} onOpenChange={setRenameOpen}>

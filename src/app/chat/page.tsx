@@ -12,6 +12,7 @@ import {
   Check,
   ClipboardCopy,
   Copy,
+  Hammer,
   Loader2,
   Plus,
   SendHorizontal,
@@ -22,7 +23,7 @@ import { toast } from "sonner";
 import { BrandLogo } from "@/components/brand-logo";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { ApiError, assistantChat } from "@/lib/api";
+import { ApiError, assistantChat, createProject } from "@/lib/api";
 import { useAuthStore } from "@/lib/store";
 import type { ChatMessage } from "@/lib/types";
 
@@ -35,6 +36,18 @@ const STARTERS = [
   "Plan a CRM data model",
   "What can Lovify build?",
 ];
+
+/* ------------------- build-intent detection ------------------- */
+/* Lovify Chat is chat-only. When the user clearly asks for an app, surface a
+   one-tap "Build this app" CTA so the conversation never dead-ends. */
+const BUILD_VERB_RE =
+  /\b(build|create|make|design|generate|develop|code|give me|i want|i need|i'd like|would like)\b/i;
+const BUILD_NOUN_RE =
+  /\b(app|application|website|web ?site|web ?app|web ?page|page|game|tool|dashboard|tracker|calculator|portfolio|landing|blog|store|shop|todo|to-do|crm|clone|platform|marketplace|quiz|timer|widget|form|portfolio site|pricing site)\b/i;
+
+function looksLikeBuildRequest(text: string): boolean {
+  return BUILD_VERB_RE.test(text) && BUILD_NOUN_RE.test(text);
+}
 
 /* --------------------- markdown-lite helpers ---------------------- */
 
@@ -180,6 +193,7 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [pending, setPending] = useState(false);
+  const [building, setBuilding] = useState(false);
   const [historyLoaded, setHistoryLoaded] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -256,6 +270,22 @@ export default function ChatPage() {
     }
   }
 
+  async function buildNow(prompt: string) {
+    if (building) return;
+    setBuilding(true);
+    try {
+      const project = await createProject(prompt);
+      router.push(`/builder/${project.id}`);
+    } catch (err) {
+      toast.error(
+        err instanceof ApiError
+          ? err.message
+          : "Could not start the build. Please try again."
+      );
+      setBuilding(false);
+    }
+  }
+
   function startNewChat() {
     reqIdRef.current++;
     setMessages([]);
@@ -299,6 +329,16 @@ export default function ChatPage() {
   }
 
   const isEmpty = messages.length === 0 && !pending;
+
+  /* One-tap build CTA: shown under the latest exchange when the user's last
+     message reads like an app request — the chat never dead-ends. */
+  const lastUser = [...messages].reverse().find((m) => m.role === "user");
+  const buildCtaVisible =
+    !isEmpty &&
+    !pending &&
+    !building &&
+    lastUser !== undefined &&
+    looksLikeBuildRequest(lastUser.content);
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -373,6 +413,31 @@ export default function ChatPage() {
                     </div>
                   )
                 )}
+
+                {buildCtaVisible && lastUser ? (
+                  <div
+                    className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-gold/25 bg-gold/[0.06] px-4 py-3 sm:px-5"
+                    aria-label="Build this app with Lovify"
+                  >
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-foreground">
+                        Ready to make it real?
+                      </p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">
+                        Lovify will design and code this app — live preview included.
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={() => void buildNow(lastUser.content)}
+                      className="shrink-0 gap-1.5"
+                    >
+                      <Hammer className="size-3.5" aria-hidden="true" />
+                      Build this app
+                    </Button>
+                  </div>
+                ) : null}
 
                 {pending ? (
                   <div className="flex max-w-[92%] gap-2.5 self-start">

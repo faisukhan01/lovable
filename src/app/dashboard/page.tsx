@@ -32,7 +32,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ApiError, listProjects } from "@/lib/api";
-import { useAuthStore } from "@/lib/store";
+import { popPendingPrompt, useAuthStore } from "@/lib/store";
 import type { ProjectSummary } from "@/lib/types";
 
 export default function DashboardPage() {
@@ -46,6 +46,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
+  const [pendingPrompt, setPendingPrompt] = useState<string | null>(null);
   const [paletteOpen, setPaletteOpen] = useState(false);
 
   /* Global Cmd/Ctrl+K toggles the command palette. */
@@ -83,7 +84,16 @@ export default function DashboardPage() {
   }, []);
 
   useEffect(() => {
-    if (hasHydrated && token) void load();
+    if (hasHydrated && token) {
+      void load();
+      /* A prompt stashed before auth (or after a failed auto-build) — open
+         the create dialog pre-filled so the idea is never lost. */
+      const pending = popPendingPrompt();
+      if (pending) {
+        setPendingPrompt(pending);
+        setCreateOpen(true);
+      }
+    }
   }, [hasHydrated, token, load]);
 
   function handleSignOut() {
@@ -310,7 +320,11 @@ export default function DashboardPage() {
         )}
       </main>
 
-      <CreateProjectDialog open={createOpen} onOpenChange={setCreateOpen} />
+      <CreateProjectDialog
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        initialPrompt={pendingPrompt}
+      />
       <CommandPalette
         open={paletteOpen}
         onOpenChange={setPaletteOpen}

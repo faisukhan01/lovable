@@ -58,8 +58,8 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { toast } from "sonner";
-import { createProject, exploreApps, getStats } from "@/lib/api";
-import { stashPendingPrompt, useAuthStore } from "@/lib/store";
+import { ApiError, createProject, exploreApps, getStats } from "@/lib/api";
+import { clearPendingPrompt, stashPendingPrompt, useAuthStore } from "@/lib/store";
 import { EXAMPLE_PROMPTS } from "@/lib/examples";
 import type { Stats } from "@/lib/types";
 import { BrandLogo } from "@/components/brand-logo";
@@ -837,8 +837,16 @@ export default function Home() {
     setCreating(true);
     try {
       const project = await createProject(value);
+      clearPendingPrompt(); // idea shipped — drop any stale stash
       router.push(`/builder/${project.id}`);
     } catch (e) {
+      if (e instanceof ApiError && e.status === 401) {
+        /* Session died mid-idea — keep the prompt so the build auto-starts
+           right after the user signs back in. */
+        stashPendingPrompt(value);
+        router.push("/auth");
+        return;
+      }
       toast.error(e instanceof Error ? e.message : "Something went wrong");
       setCreating(false);
     }

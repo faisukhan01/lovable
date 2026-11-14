@@ -6,8 +6,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { ArrowLeft, Check, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { createProject, login, signup } from "@/lib/api";
-import { popPendingPrompt, useAuthStore } from "@/lib/store";
+import { ApiError, createProject, login, signup } from "@/lib/api";
+import { popPendingPrompt, stashPendingPrompt, useAuthStore } from "@/lib/store";
 import { BrandLogo } from "@/components/brand-logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -75,6 +75,9 @@ function AuthPanel() {
           const project = await createProject(pending);
           router.replace(`/builder/${project.id}`);
         } catch {
+          /* Give the idea a second chance: the dashboard picks the stash up
+             and opens the create dialog pre-filled. */
+          stashPendingPrompt(pending);
           toast.error("Couldn’t start your app — opening dashboard");
           router.replace("/dashboard");
         }
@@ -83,7 +86,16 @@ function AuthPanel() {
         router.replace(target);
       }
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Something went wrong");
+      if (err instanceof ApiError && err.status === 409) {
+        /* Duplicate email on signup — guide them to sign in instead of
+           leaving them stuck between both tabs. */
+        setTab("signin");
+        setEmail(trimmedEmail);
+        setPassword("");
+        toast.error("This email already has an account — sign in instead.");
+      } else {
+        toast.error(err instanceof Error ? err.message : "Something went wrong");
+      }
     } finally {
       setLoading(false);
     }

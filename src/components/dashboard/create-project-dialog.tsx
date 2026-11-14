@@ -72,9 +72,12 @@ const VIBES: { id: string; label: string; directive: string }[] = [
 export function CreateProjectDialog({
   open,
   onOpenChange,
+  initialPrompt,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** Seed the draft when the dialog opens (e.g. a stashed pending prompt). */
+  initialPrompt?: string | null;
 }) {
   const router = useRouter();
   const [prompt, setPrompt] = useState("");
@@ -82,13 +85,15 @@ export function CreateProjectDialog({
   const [creating, setCreating] = useState(false);
   const [enhancing, setEnhancing] = useState(false);
 
-  // Reset the draft whenever the dialog closes.
+  // Seed the draft from initialPrompt, then reset when the dialog closes.
   useEffect(() => {
-    if (!open) {
+    if (open) {
+      if (initialPrompt && !prompt) setPrompt(initialPrompt);
+    } else {
       setPrompt("");
       setVibe(null);
     }
-  }, [open]);
+  }, [open, initialPrompt, prompt]);
 
   const vibeDirective = VIBES.find((v) => v.id === vibe)?.directive;
 

@@ -72,6 +72,16 @@ async function request<T>(
   }
 
   if (!res.ok) {
+    // Gateway 502/503/504 means the FastAPI backend isn't up (crash, cold
+    // boot, or the keeper is still reinstalling deps). Say that instead of a
+    // generic failure so users know a retry in a few seconds will work —
+    // the boot-services keeper revives the backend automatically.
+    if (res.status === 502 || res.status === 503 || res.status === 504) {
+      throw new ApiError(
+        res.status,
+        "The Lovify backend is waking up. Give it a few seconds and try again."
+      );
+    }
     const detail =
       (data as { detail?: unknown })?.detail instanceof String ||
       typeof (data as { detail?: unknown })?.detail === "string"

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { spawn } from 'child_process';
+import { spawn, execFile } from 'child_process';
 import net from 'net';
 import fs from 'fs';
 
@@ -12,7 +12,18 @@ import fs from 'fs';
  * platform's /start.sh also auto-starts mini-services on cold boots — this
  * route guarantees they are up in the current session, self-healing on every
  * app load (the frontend pings this endpoint once on mount).
+ *
+ * Self-healing, part 2: sandbox resets can wipe pip-installed packages from
+ * the shared venv (this exact bug once killed the backend with
+ * "ModuleNotFoundError: No module named 'sqlalchemy'" and every "Build it"
+ * click showed "Something went wrong"). If the FastAPI port is down we now
+ * verify the Python deps first, reinstall them in the background when
+ * missing, and only then boot uvicorn.
  */
+
+const VENV_PY = '/home/z/.venv/bin/python';
+const VENV_PIP = '/home/z/.venv/bin/pip';
+const API_DIR = '/home/z/my-project/mini-services/api';
 
 function isUp(port: number): Promise<boolean> {
   return new Promise((resolve) => {
@@ -39,6 +50,41 @@ function spawnService(cwd: string, cmd: string, args: string[], logFile: string)
   }
 }
 
+/** Cheap probe: are the backend's Python dependencies importable? */
+function depsOk(): Promise<boolean> {
+  return new Promise((resolve) => {
+    execFile(
+      VENV_PY,
+      ['-c', 'import sqlalchemy, fastapi, jose, passlib'],
+      { timeout: 15000 },
+      (err) => resolve(!err)
+    );
+  });
+}
+
+/**
+ * Reinstall backend requirements, then boot uvicorn once the install
+ * finishes. Fire-and-forget — the next keeper ping picks the service up.
+ */
+function installDepsThenBoot(logFile: string): void {
+  const out = fs.openSync(logFile, 'a');
+  fs.appendFileSync(logFile, `\n[boot-services] ${new Date().toISOString()} python deps missing — reinstalling requirements.txt\n`);
+  const pip = spawn(VENV_PIP, ['install', '-r', 'requirements.txt'], {
+    cwd: API_DIR,
+    stdio: ['ignore', out, out],
+    env: process.env,
+  });
+  pip.on('close', (code) => {
+    fs.appendFileSync(logFile, `[boot-services] pip install exited with ${code}; booting uvicorn\n`);
+    spawnService(API_DIR, '/home/z/.venv/bin/uvicorn', ['index:app', '--host', '0.0.0.0', '--port', '8000'], logFile);
+  });
+  pip.on('error', () => {
+    // pip itself failed to launch — still try uvicorn so the failure is at least visible in the log
+    spawnService(API_DIR, '/home/z/.venv/bin/uvicorn', ['index:app', '--host', '0.0.0.0', '--port', '8000'], logFile);
+  });
+  pip.unref();
+}
+
 export async function GET() {
   const services: Record<string, string> = {};
 
@@ -58,14 +104,18 @@ export async function GET() {
   // FastAPI main backend (port 8000)
   if (await isUp(8000)) {
     services.api = 'running';
-  } else {
+  } else if (await depsOk()) {
     spawnService(
-      '/home/z/my-project/mini-services/api',
+      API_DIR,
       '/home/z/.venv/bin/uvicorn',
       ['index:app', '--host', '0.0.0.0', '--port', '8000'],
       '/home/z/my-project/api-service.log'
     );
     services.api = 'starting';
+  } else {
+    // Sandbox reset wiped the venv — reinstall first, then boot (self-healing).
+    installDepsThenBoot('/home/z/my-project/api-service.log');
+    services.api = 'installing-deps';
   }
 
   return NextResponse.json({ ok: true, services, ts: Date.now() });

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   BarChart3,
@@ -84,11 +84,17 @@ export function CreateProjectDialog({
   const [vibe, setVibe] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const [enhancing, setEnhancing] = useState(false);
+  /* Tracks which initialPrompt was already seeded, so dismissing the dialog
+     and reopening it manually doesn't resurrect the old stash. */
+  const seededRef = useRef<string | null>(null);
 
-  // Seed the draft from initialPrompt, then reset when the dialog closes.
+  // Seed the draft from initialPrompt once, then reset when the dialog closes.
   useEffect(() => {
     if (open) {
-      if (initialPrompt && !prompt) setPrompt(initialPrompt);
+      if (initialPrompt && seededRef.current !== initialPrompt && !prompt) {
+        setPrompt(initialPrompt);
+        seededRef.current = initialPrompt;
+      }
     } else {
       setPrompt("");
       setVibe(null);

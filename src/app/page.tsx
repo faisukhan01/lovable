@@ -830,8 +830,14 @@ export default function Home() {
     if (!value || creating) return;
     const currentToken = useAuthStore.getState().token;
     if (!currentToken) {
+      /* Keep the user on the landing page: notify them to sign in first.
+         The idea stays in the box AND is stashed — after sign-in the
+         dashboard opens with it pre-filled, ready to build. */
       stashPendingPrompt(value);
-      router.push("/auth");
+      toast("Sign in to start building", {
+        description: "Your idea is saved and will be waiting on your dashboard.",
+        action: { label: "Sign in", onClick: () => router.push("/auth") },
+      });
       return;
     }
     setCreating(true);
@@ -841,10 +847,13 @@ export default function Home() {
       router.push(`/builder/${project.id}`);
     } catch (e) {
       if (e instanceof ApiError && e.status === 401) {
-        /* Session died mid-idea — keep the prompt so the build auto-starts
-           right after the user signs back in. */
+        /* Session died mid-idea — keep the prompt so the dashboard picks it
+           up right after the user signs back in. */
         stashPendingPrompt(value);
-        router.push("/auth");
+        toast("Sign in to start building", {
+          description: "Your idea is saved and will be waiting on your dashboard.",
+          action: { label: "Sign in", onClick: () => router.push("/auth") },
+        });
         return;
       }
       toast.error(e instanceof Error ? e.message : "Something went wrong");

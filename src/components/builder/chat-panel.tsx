@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertTriangle,
   Bandage,
@@ -10,6 +10,7 @@ import {
   MessagesSquare,
   MonitorSmartphone,
   Moon,
+  RotateCcw,
   Search,
   SendHorizontal,
   Sparkles,
@@ -146,6 +147,14 @@ export function ChatPanel({
   }, [messages.length, generating, asking, project.status]);
 
   const busy = generating || asking;
+
+  /* The user's latest request — powers the one-tap Retry on a failed build. */
+  const lastUserText = useMemo(() => {
+    for (let i = messages.length - 1; i >= 0; i--) {
+      if (messages[i].role === "user") return displayContent(messages[i].content);
+    }
+    return null;
+  }, [messages]);
 
   async function submit() {
     const text = input.trim();
@@ -293,9 +302,21 @@ export function ChatPanel({
                     {project.error}
                   </p>
                 ) : null}
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Try the “Fix errors” quick action below.
-                </p>
+                {lastUserText && !busy ? (
+                  <button
+                    type="button"
+                    onClick={() => void onSend(lastUserText)}
+                    disabled={sending}
+                    className="mt-2 inline-flex items-center gap-1.5 rounded-md border border-rose-400/40 bg-rose-500/10 px-2.5 py-1 text-xs font-medium text-rose-200 transition-colors hover:bg-rose-500/20 disabled:opacity-50"
+                  >
+                    {sending ? (
+                      <Loader2 className="size-3 animate-spin" />
+                    ) : (
+                      <RotateCcw className="size-3" />
+                    )}
+                    Retry build
+                  </button>
+                ) : null}
               </div>
             </div>
           ) : null}

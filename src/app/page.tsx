@@ -1004,7 +1004,7 @@ export default function Home() {
 
       <main>
         {/* ------------------------------ hero ------------------------------ */}
-        <section className="relative overflow-hidden pb-20 pt-32 sm:pt-40">
+        <section className="relative overflow-hidden">
           <div aria-hidden="true" className="pointer-events-none absolute inset-0">
             <div className="animate-grid-pan absolute inset-0 bg-grid" />
             {SPECKS.map((s, i) => (
@@ -1025,7 +1025,7 @@ export default function Home() {
             ))}
           </div>
 
-          <div className="relative mx-auto max-w-4xl px-5 text-center sm:px-6">
+          <div className="relative mx-auto flex min-h-[100svh] w-full max-w-4xl flex-col px-5 pb-6 pt-32 text-center sm:px-6 sm:pb-8 sm:pt-40">
             <motion.p
               initial={{ opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
@@ -1059,12 +1059,42 @@ export default function Home() {
               working app in seconds — then you refine it by simply talking to it.
             </motion.p>
 
-            {/* prompt box */}
+            {/* flexible spacer — docks the composer at the bottom of the
+                first viewport, Cursor/v0 command-bar style */}
+            <div aria-hidden="true" className="min-h-5 flex-1 sm:min-h-10" />
+
+            {/* example chips — sit right above the composer, swipeable on mobile */}
+            <motion.div
+              variants={staggerContainer}
+              initial="hidden"
+              animate="show"
+              className="marquee-mask mb-5 flex gap-2 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] sm:flex-wrap sm:justify-center sm:overflow-visible sm:pb-0 [&::-webkit-scrollbar]:hidden"
+            >
+              {EXAMPLE_PROMPTS.map((ex) => {
+                const Icon = EXAMPLE_ICONS[ex.icon] ?? Sparkles;
+                return (
+                  <motion.button
+                    key={ex.icon}
+                    variants={chipPop}
+                    type="button"
+                    onClick={() => fillPrompt(ex.prompt)}
+                    whileHover={{ scale: 1.04 }}
+                    whileTap={{ scale: 0.96 }}
+                    className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.02] px-3.5 py-1.5 text-sm text-muted-foreground transition-colors hover:border-gold/35 hover:text-foreground"
+                  >
+                    <Icon className="h-3.5 w-3.5" aria-hidden="true" />
+                    {ex.title}
+                  </motion.button>
+                );
+              })}
+            </motion.div>
+
+            {/* prompt box — docked at the bottom like a command bar */}
             <motion.div
               initial={{ opacity: 0, y: 24, scale: 0.985 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1], delay: 0.62 }}
-              className="relative mx-auto mt-10 max-w-3xl"
+              className="relative mx-auto w-full max-w-3xl"
             >
               <div className="rounded-xl border border-white/10 bg-card shadow-[0_24px_60px_-30px_rgba(0,0,0,0.9)] transition-colors duration-300 focus-within:border-gold/45">
                 <div className="p-4 sm:p-5">
@@ -1277,32 +1307,6 @@ export default function Home() {
                     document.body
                   )
                 : null}
-            </motion.div>
-
-            {/* example chips — swipeable on mobile */}
-            <motion.div
-              variants={staggerContainer}
-              initial="hidden"
-              animate="show"
-              className="marquee-mask mt-5 flex gap-2 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] sm:flex-wrap sm:justify-center sm:overflow-visible sm:pb-0 [&::-webkit-scrollbar]:hidden"
-            >
-              {EXAMPLE_PROMPTS.map((ex) => {
-                const Icon = EXAMPLE_ICONS[ex.icon] ?? Sparkles;
-                return (
-                  <motion.button
-                    key={ex.icon}
-                    variants={chipPop}
-                    type="button"
-                    onClick={() => fillPrompt(ex.prompt)}
-                    whileHover={{ scale: 1.04 }}
-                    whileTap={{ scale: 0.96 }}
-                    className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.02] px-3.5 py-1.5 text-sm text-muted-foreground transition-colors hover:border-gold/35 hover:text-foreground"
-                  >
-                    <Icon className="h-3.5 w-3.5" aria-hidden="true" />
-                    {ex.title}
-                  </motion.button>
-                );
-              })}
             </motion.div>
           </div>
         </section>

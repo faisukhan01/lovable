@@ -7,7 +7,7 @@
  * handlers as the mobile chat panel.
  */
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertTriangle,
   ArrowUp,
@@ -15,6 +15,7 @@ import {
   HelpCircle,
   Loader2,
   Plus,
+  RotateCcw,
   Sparkles,
   WandSparkles,
   X,
@@ -71,6 +72,14 @@ export function ChatDock({
   const taRef = useRef<HTMLTextAreaElement | null>(null);
 
   const busy = generating || asking;
+
+  /* The user's latest request — powers the one-tap Retry on a failed build. */
+  const lastUserText = useMemo(() => {
+    for (let i = messages.length - 1; i >= 0; i--) {
+      if (messages[i].role === "user") return displayContent(messages[i].content);
+    }
+    return null;
+  }, [messages]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
@@ -200,6 +209,21 @@ export function ChatDock({
                 The last change failed
               </p>
               <p className="mt-1 break-words text-[11.5px] text-zinc-400">{error}</p>
+              {lastUserText && !busy ? (
+                <button
+                  type="button"
+                  onClick={() => void onSend(lastUserText)}
+                  disabled={sending}
+                  className="mt-2 inline-flex items-center gap-1.5 rounded-md border border-rose-400/40 bg-rose-500/10 px-2.5 py-1 text-[11.5px] font-medium text-rose-200 transition-colors hover:bg-rose-500/20 disabled:opacity-50"
+                >
+                  {sending ? (
+                    <Loader2 className="size-3 animate-spin" aria-hidden="true" />
+                  ) : (
+                    <RotateCcw className="size-3" aria-hidden="true" />
+                  )}
+                  Retry build
+                </button>
+              ) : null}
             </div>
           ) : null}
         </div>

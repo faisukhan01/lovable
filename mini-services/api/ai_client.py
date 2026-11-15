@@ -1,4 +1,12 @@
-"""Client for the Z.AI brain service (mini-services/ai-service) + response parsing."""
+"""Client for the Z.AI brain service (mini-services/ai-service) + response parsing.
+
+Reliability contract: the sandbox platform rotates /etc/.z-ai-config whenever
+it pleases (boot writes a placeholder first; the real token can land minutes
+later). A user build must NEVER die just because the credentials were mid-flight,
+so call_ai retries patiently for minutes (it runs inside a background task the
+user already sees as "building") and reports progress so the project row stays
+fresh against the 5-minute stale-marker.
+"""
 
 import json
 import re
@@ -17,18 +25,30 @@ FENCE_RE = re.compile(r"```(?:html)?\s*(.*?)```", re.DOTALL | re.IGNORECASE)
 TRANSIENT_MARKERS = (
     "x-token",
     "status 401",
+    "status 403",
     "status 429",
     "status 5",
+    "401",
+    "403",
+    "429",
+    "unauthorized",
+    "forbidden",
+    "rate limit",
+    "overloaded",
     "unreachable",
     "empty response",
     "configuration file",
     "timed out",
+    "timeout",
     "temporary",
+    "temporarily",
+    "connection",
 )
 
 FRIENDLY_AUTH_ERROR = (
-    "Lovify's AI brain is re-authenticating with Z.AI. "
-    "Please send your request again in a few seconds."
+    "Lovify could not reach the Z.AI brain after several minutes of automatic retries. "
+    "The platform is re-issuing credentials — press Retry (or send the request again) "
+    "and it will go through."
 )
 
 
@@ -36,29 +56,52 @@ class GenerationError(Exception):
     """Raised when the AI output is missing, invalid or truncated."""
 
 
+class TransientGenerationError(GenerationError):
+    """A brain/infrastructure blip that later attempts may survive."""
+
+
 def _is_transient(error_text: str) -> bool:
     lowered = error_text.lower()
     return any(marker in lowered for marker in TRANSIENT_MARKERS)
 
 
-def call_ai(mode: str, prompt: str, current_html: str | None = None, history: list | None = None) -> str:
+def call_ai(
+    mode: str,
+    prompt: str,
+    current_html: str | None = None,
+    history: list | None = None,
+    progress=None,
+) -> str:
     """Call the Z.AI brain service and return the raw model output.
 
     Retries transient brain failures (credential rotation, blips) with a
-    short backoff so a mid-flight platform credential refresh never turns
-    into a failed build for the user.
+    patient backoff — the whole schedule fits in ~4.5 minutes, far under the
+    UI's stale-build window because `progress` keeps the project row touched.
+
+    `progress` (if given) is called before every attempt so callers can bump
+    `updated_at` and keep the build visibly alive.
     """
     payload = {"mode": mode, "prompt": prompt, "history": history or []}
     if current_html:
         payload["currentHtml"] = current_html
 
+    # Patient schedule: survives a brain restart AND the platform's
+    # credential-rotation window (observed up to a few minutes after boot).
+    sleeps = (3, 6, 10, 15, 20, 25, 30, 30)  # 139s of waiting across 8 attempts
+
     last_text = "AI generation failed"
-    for attempt in range(3):  # 1 real try + 2 retries on transient failures
+    for attempt in range(len(sleeps) + 1):
+        if callable(progress):
+            try:
+                progress(attempt)
+            except Exception:  # noqa: S110 — progress must never kill a build
+                pass
+
         try:
             resp = httpx.post(
                 f"{settings.ai_service_url}/generate",
                 json=payload,
-                timeout=httpx.Timeout(300.0, connect=10.0),
+                timeout=httpx.Timeout(120.0, connect=10.0),
             )
         except httpx.HTTPError as exc:
             last_text = f"AI brain unreachable: {exc}"
@@ -68,10 +111,10 @@ def call_ai(mode: str, prompt: str, current_html: str | None = None, history: li
             except Exception as exc:
                 last_text = "AI brain returned an invalid response"
                 data = None
-                if attempt < 2:
-                    time.sleep(2.0 * (attempt + 1))
+                if attempt < len(sleeps):
+                    time.sleep(sleeps[attempt])
                     continue
-                raise GenerationError(last_text) from exc
+                raise TransientGenerationError(last_text) from exc
 
             if resp.status_code == 200 and data.get("ok"):
                 return str(data.get("raw", ""))
@@ -80,13 +123,13 @@ def call_ai(mode: str, prompt: str, current_html: str | None = None, history: li
             if not _is_transient(last_text):
                 break  # permanent (e.g. truncated output) — surface it now
 
-        if attempt < 2:
-            time.sleep(2.0 * (attempt + 1))
+        if attempt < len(sleeps):
+            time.sleep(sleeps[attempt])
 
     if _is_transient(last_text):
-        # All retries burned on auth/infra blips — give the user an
-        # actionable message instead of a raw SDK error string.
-        raise GenerationError(FRIENDLY_AUTH_ERROR)
+        # All retries burned on auth/infra blips — actionable message + the
+        # transient subtype lets the caller schedule one more rescue round.
+        raise TransientGenerationError(FRIENDLY_AUTH_ERROR)
     raise GenerationError(last_text)
 
 

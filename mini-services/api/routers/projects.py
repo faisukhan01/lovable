@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from database import get_db
 from deps import get_current_user
-from generation import fail_stale_generations, run_generation
+from generation import fail_stale_generations, resurrect_failed_generations, run_generation
 from models import Message, Project, ProjectVersion, User
 
 router = APIRouter(prefix="/api/projects", tags=["projects"])
@@ -170,6 +170,7 @@ def list_projects(
     db: Session = Depends(get_db),
 ):
     fail_stale_generations()
+    resurrect_failed_generations()
     projects = (
         db.query(Project)
         .filter(Project.user_id == user.id)
@@ -290,6 +291,11 @@ def get_project(
             project.status = "error"
             project.error = "Generation timed out. Please send your request again."
             db.commit()
+    if project.status == "error":
+        # The build died to an infra blip? Quietly re-queue it — polling
+        # will then watch it flip back to "generating" and complete.
+        resurrect_failed_generations()
+        db.refresh(project)
     return _detail(db, project)
 
 

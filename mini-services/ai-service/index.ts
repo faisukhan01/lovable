@@ -89,8 +89,10 @@ function currentConfigMtime(): number {
 
 function configChangedSinceClient(): boolean {
   if (!zaiPromise) return false;
-  const now = currentConfigMtime();
-  return now !== 0 && configMtimeMs !== 0 && now !== configMtimeMs;
+  /* Covers both rotation AND a vanished file (0 !== mtime). The client is
+     only created after we have statted the file, so this never misfires on
+     the very first call. */
+  return currentConfigMtime() !== configMtimeMs;
 }
 
 async function getZAI(): Promise<any> {
@@ -107,13 +109,15 @@ async function getZAI(): Promise<any> {
 }
 
 /* Background watch: if the platform re-issues the config while we are
-   idle, drop the cached client so the NEXT request is already fresh. */
+   idle, drop the cached client so the NEXT request is already fresh.
+   10s cadence — credential rotation right after a sandbox boot is the
+   #1 cause of failed builds, so pick it up quickly. */
 setInterval(() => {
   if (configChangedSinceClient()) {
     console.log('[ai-service] background check — credentials rotated, resetting client');
     zaiPromise = null;
   }
-}, 30_000).unref();
+}, 10_000).unref();
 
 function json(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -127,15 +131,17 @@ function json(data: unknown, status = 200) {
 /* ------------------------------------------------------------------ */
 
 function isAuthError(err: any): boolean {
-  const msg = String(err?.message || err || '');
+  const msg = String(err?.message || err || '').toLowerCase();
   return (
-    msg.includes('X-Token') ||
+    msg.includes('x-token') ||
     msg.includes('status 401') ||
-    msg.includes('Configuration file not found')
+    msg.includes('status 403') ||
+    msg.includes('unauthorized') ||
+    msg.includes('configuration file not found')
   );
 }
 
-async function complete(messages: any[], retries = 4, maxTokens = 16000): Promise<string> {
+async function complete(messages: any[], retries = 5, maxTokens = 16000): Promise<string> {
   let lastError: any;
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
@@ -162,9 +168,10 @@ async function complete(messages: any[], retries = 4, maxTokens = 16000): Promis
         zaiPromise = null;
       }
       if (attempt < retries) {
-        /* Escalating backoff — long enough for a mid-flight credential
-           rotation on the platform to settle before the next attempt. */
-        await new Promise((r) => setTimeout(r, 800 * Math.pow(2, attempt)));
+        /* Escalating backoff, capped at 5s. The Python layer adds minutes
+           of patience on top — this layer just rides out quick blips and
+           same-window credential re-issues. */
+        await new Promise((r) => setTimeout(r, Math.min(5000, 800 * Math.pow(2, attempt))));
       }
     }
   }
@@ -182,7 +189,18 @@ Bun.serve({
     const url = new URL(req.url);
 
     if (url.pathname === '/health') {
-      return json({ status: 'ok', service: 'lovify-ai-service', brain: 'Z.AI' });
+      let tokenIssued = false;
+      try {
+        tokenIssued = Boolean(JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8')).token);
+      } catch {
+        tokenIssued = false;
+      }
+      return json({
+        status: 'ok',
+        service: 'lovify-ai-service',
+        brain: 'Z.AI',
+        credentials: tokenIssued ? 'token issued' : 'awaiting platform token',
+      });
     }
 
     /* -------- App generation / editing (used by FastAPI backend) ---- */

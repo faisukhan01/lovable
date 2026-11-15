@@ -334,7 +334,15 @@ function EditorColumn({
   children: ReactNode;
 }) {
   const body = (
-    <main className={cn("min-h-0 flex-1", mainClassName ?? "overflow-y-auto")}>
+    <main
+      className={cn(
+        /* h-full + flex column so single-child views (welcome composer,
+           code editor, preview) can stretch to the full editor height
+           even inside resizable panels, whose wrappers are plain blocks. */
+        "flex h-full min-h-0 flex-1 flex-col",
+        mainClassName ?? "overflow-y-auto"
+      )}
+    >
       {children}
     </main>
   );

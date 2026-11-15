@@ -10,9 +10,11 @@
  * Port: 8001 (reached by FastAPI over localhost, by the browser via gateway)
  */
 
+import fs from 'fs';
 import ZAI from 'z-ai-web-dev-sdk';
 
 const PORT = 8001;
+const CONFIG_PATH = '/etc/.z-ai-config';
 
 /* ------------------------------------------------------------------ */
 /*  Prompt engineering — what makes Lovify better than the rest       */
@@ -65,11 +67,53 @@ Be concise, warm and practical. When users describe an app idea, suggest a sharp
 /*  SDK bootstrap                                                     */
 /* ------------------------------------------------------------------ */
 
+/* ------------------------------------------------------------------ */
+/*  SDK bootstrap + credential rotation healing                        */
+/*  The platform rotates /etc/.z-ai-config on disk (diskRetire). The    */
+/*  SDK reads the token ONCE at client creation and sends no X-Token    */
+/*  header if it was absent — every request then fails 401 forever.     */
+/*  So we: (a) remember the config mtime at creation, (b) re-create     */
+/*  the client whenever the file changed, proactively AND on 401s.      */
+/* ------------------------------------------------------------------ */
+
 let zaiPromise: Promise<any> | null = null;
-function getZAI() {
-  if (!zaiPromise) zaiPromise = ZAI.create();
+let configMtimeMs = 0;
+
+function currentConfigMtime(): number {
+  try {
+    return fs.statSync(CONFIG_PATH).mtimeMs;
+  } catch {
+    return 0;
+  }
+}
+
+function configChangedSinceClient(): boolean {
+  if (!zaiPromise) return false;
+  const now = currentConfigMtime();
+  return now !== 0 && configMtimeMs !== 0 && now !== configMtimeMs;
+}
+
+async function getZAI(): Promise<any> {
+  /* Fresh client needed on first call or after the config file rotated. */
+  if (zaiPromise && configChangedSinceClient()) {
+    console.log('[ai-service] Z.AI config rotated on disk — re-reading credentials');
+    zaiPromise = null;
+  }
+  if (!zaiPromise) {
+    configMtimeMs = currentConfigMtime();
+    zaiPromise = ZAI.create();
+  }
   return zaiPromise;
 }
+
+/* Background watch: if the platform re-issues the config while we are
+   idle, drop the cached client so the NEXT request is already fresh. */
+setInterval(() => {
+  if (configChangedSinceClient()) {
+    console.log('[ai-service] background check — credentials rotated, resetting client');
+    zaiPromise = null;
+  }
+}, 30_000).unref();
 
 function json(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -91,7 +135,7 @@ function isAuthError(err: any): boolean {
   );
 }
 
-async function complete(messages: any[], retries = 2, maxTokens = 16000): Promise<string> {
+async function complete(messages: any[], retries = 4, maxTokens = 16000): Promise<string> {
   let lastError: any;
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
@@ -118,7 +162,9 @@ async function complete(messages: any[], retries = 2, maxTokens = 16000): Promis
         zaiPromise = null;
       }
       if (attempt < retries) {
-        await new Promise((r) => setTimeout(r, 1200 * (attempt + 1)));
+        /* Escalating backoff — long enough for a mid-flight credential
+           rotation on the platform to settle before the next attempt. */
+        await new Promise((r) => setTimeout(r, 800 * Math.pow(2, attempt)));
       }
     }
   }

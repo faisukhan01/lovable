@@ -2,6 +2,7 @@
 
 import json
 import re
+import time
 
 import httpx
 
@@ -11,33 +12,82 @@ META_RE = re.compile(r"<LOVIFY_META>\s*(\{.*?\})\s*</LOVIFY_META>", re.DOTALL)
 HTML_RE = re.compile(r"<LOVIFY_HTML>\s*(<!DOCTYPE.*?)(?:</LOVIFY_HTML>)?\s*$", re.DOTALL | re.IGNORECASE)
 FENCE_RE = re.compile(r"```(?:html)?\s*(.*?)```", re.DOTALL | re.IGNORECASE)
 
+# Substrings that mark a TRANSIENT brain failure worth retrying (the brain
+# heals itself — it re-reads rotated Z.AI credentials between attempts).
+TRANSIENT_MARKERS = (
+    "x-token",
+    "status 401",
+    "status 429",
+    "status 5",
+    "unreachable",
+    "empty response",
+    "configuration file",
+    "timed out",
+    "temporary",
+)
+
+FRIENDLY_AUTH_ERROR = (
+    "Lovify's AI brain is re-authenticating with Z.AI. "
+    "Please send your request again in a few seconds."
+)
+
 
 class GenerationError(Exception):
     """Raised when the AI output is missing, invalid or truncated."""
 
 
+def _is_transient(error_text: str) -> bool:
+    lowered = error_text.lower()
+    return any(marker in lowered for marker in TRANSIENT_MARKERS)
+
+
 def call_ai(mode: str, prompt: str, current_html: str | None = None, history: list | None = None) -> str:
-    """Call the Z.AI brain service and return the raw model output."""
+    """Call the Z.AI brain service and return the raw model output.
+
+    Retries transient brain failures (credential rotation, blips) with a
+    short backoff so a mid-flight platform credential refresh never turns
+    into a failed build for the user.
+    """
     payload = {"mode": mode, "prompt": prompt, "history": history or []}
     if current_html:
         payload["currentHtml"] = current_html
-    try:
-        resp = httpx.post(
-            f"{settings.ai_service_url}/generate",
-            json=payload,
-            timeout=httpx.Timeout(300.0, connect=10.0),
-        )
-    except httpx.HTTPError as exc:
-        raise GenerationError(f"AI brain unreachable: {exc}") from exc
 
-    try:
-        data = resp.json()
-    except Exception as exc:
-        raise GenerationError("AI brain returned an invalid response") from exc
+    last_text = "AI generation failed"
+    for attempt in range(3):  # 1 real try + 2 retries on transient failures
+        try:
+            resp = httpx.post(
+                f"{settings.ai_service_url}/generate",
+                json=payload,
+                timeout=httpx.Timeout(300.0, connect=10.0),
+            )
+        except httpx.HTTPError as exc:
+            last_text = f"AI brain unreachable: {exc}"
+        else:
+            try:
+                data = resp.json()
+            except Exception as exc:
+                last_text = "AI brain returned an invalid response"
+                data = None
+                if attempt < 2:
+                    time.sleep(2.0 * (attempt + 1))
+                    continue
+                raise GenerationError(last_text) from exc
 
-    if resp.status_code != 200 or not data.get("ok"):
-        raise GenerationError(str(data.get("error", "AI generation failed")))
-    return str(data.get("raw", ""))
+            if resp.status_code == 200 and data.get("ok"):
+                return str(data.get("raw", ""))
+
+            last_text = str(data.get("error", "AI generation failed"))
+            if not _is_transient(last_text):
+                break  # permanent (e.g. truncated output) — surface it now
+
+        if attempt < 2:
+            time.sleep(2.0 * (attempt + 1))
+
+    if _is_transient(last_text):
+        # All retries burned on auth/infra blips — give the user an
+        # actionable message instead of a raw SDK error string.
+        raise GenerationError(FRIENDLY_AUTH_ERROR)
+    raise GenerationError(last_text)
 
 
 def parse_lovify(raw: str) -> tuple[dict, str]:

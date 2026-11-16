@@ -17,7 +17,10 @@ __pycache__/
 
 # sandbox runtime artifacts
 *.log
-db/*.db
+# db/custom.db IS tracked on purpose: the sandbox reset wipes ignored files,
+# which used to delete every Lovify account + project (the "every build
+# errors" bug — sessions pointed at users that no longer existed). Only the
+# SQLite side files stay ignored; the sync script checkpoints the WAL first.
 db/*.db-shm
 db/*.db-wal
 db/*.db-journal

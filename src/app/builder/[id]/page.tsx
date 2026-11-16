@@ -2,6 +2,7 @@
 
 import { use, useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
   Check,
@@ -98,6 +99,7 @@ export default function BuilderPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
+  const router = useRouter();
 
   const [project, setProject] = useState<ProjectDetail | null>(null);
   const [loadingInitial, setLoadingInitial] = useState(true);
@@ -381,6 +383,10 @@ export default function BuilderPage({
           return true;
         } catch (err) {
           setOptimistic((o) => o.filter((m) => m.id !== optimisticMsg.id));
+          if (err instanceof ApiError && err.status === 401) {
+            router.replace(`/auth?next=${encodeURIComponent(`/builder/${id}`)}`);
+            return false;
+          }
           toast.error(
             err instanceof ApiError
               ? err.message
@@ -408,6 +414,10 @@ export default function BuilderPage({
           return true;
         } catch (err) {
           setOptimistic((o) => o.filter((m) => m.id !== optimisticMsg.id));
+          if (err instanceof ApiError && err.status === 401) {
+            router.replace(`/auth?next=${encodeURIComponent(`/builder/${id}`)}`);
+            return false;
+          }
           toast.error(
             err instanceof ApiError
               ? err.message
@@ -430,6 +440,10 @@ export default function BuilderPage({
       } catch (err) {
         setProject(prev);
         setOptimistic((o) => o.filter((m) => m.id !== optimisticMsg.id));
+        if (err instanceof ApiError && err.status === 401) {
+          router.replace(`/auth?next=${encodeURIComponent(`/builder/${id}`)}`);
+          return false;
+        }
         toast.error(
           err instanceof ApiError
             ? err.message
@@ -440,7 +454,7 @@ export default function BuilderPage({
         setSending(false);
       }
     },
-    [id, project, sending, thinking, mode]
+    [id, project, sending, thinking, mode, router]
   );
 
   async function handleRestore(version: number) {
@@ -651,7 +665,9 @@ export default function BuilderPage({
               </Button>
             ) : unauthenticated ? (
               <Button asChild>
-                <Link href="/auth">Sign in</Link>
+                <Link href={`/auth?next=${encodeURIComponent(`/builder/${id}`)}`}>
+                  Sign in
+                </Link>
               </Button>
             ) : (
               <Button

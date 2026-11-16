@@ -110,6 +110,10 @@ function AuthPanel() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  /* Shown when a sign-in hits 401: the workspace database may have been
+     reset, so the account itself is gone. Guide the user to re-create it
+     instead of leaving them retrying a dead password. */
+  const [signinHint, setSigninHint] = useState(false);
 
   /* Route guard: already signed in -> leave the auth page. */
   useEffect(() => {
@@ -148,6 +152,7 @@ function AuthPanel() {
     }
 
     setLoading(true);
+    setSigninHint(false);
     try {
       const res =
         tab === "signin"
@@ -174,6 +179,12 @@ function AuthPanel() {
         setEmail(trimmedEmail);
         setPassword("");
         toast.error("This email already has an account — sign in instead.");
+      } else if (err instanceof ApiError && err.status === 401 && tab === "signin") {
+        /* Wrong password OR the account no longer exists (e.g. the sandbox
+           reset wiped the database). Offer the one-tap path out. */
+        setPassword("");
+        setSigninHint(true);
+        toast.error("That email and password don't match any account.");
       } else {
         toast.error(err instanceof Error ? err.message : "Something went wrong");
       }
@@ -491,6 +502,32 @@ function AuthPanel() {
                   </motion.div>
                 </AnimatePresence>
               </form>
+
+              {/* Missing-account hint — the workspace DB may have been reset. */}
+              {signinHint && isSignin ? (
+                <motion.div
+                  initial={{ opacity: 0, y: -6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.35, ease: EASE }}
+                  className="mt-4 rounded-xl border border-gold/25 bg-gold/[0.06] p-3.5"
+                >
+                  <p className="text-[12.5px] leading-relaxed text-zinc-300">
+                    No account found for that email. If the workspace was reset,
+                    your builder profile was too — create a free one in seconds.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTab("signup");
+                      setSigninHint(false);
+                    }}
+                    className="mt-2 inline-flex items-center gap-1.5 text-[12.5px] font-medium text-gold transition-colors hover:text-gold/80"
+                  >
+                    Create a free account
+                    <ArrowRight className="size-3.5" aria-hidden="true" />
+                  </button>
+                </motion.div>
+              ) : null}
 
               <p className="mt-5 text-center text-[11px] leading-relaxed text-zinc-600">
                 By continuing you agree to build wonderful things.
